@@ -1,0 +1,15 @@
+name: serverfiles
+services:
+  caddy:
+    image: caddy:2
+    container_name: serverfiles-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/caddy:/data
+      - ./logs/caddy:/var/log/caddy
+networks:
+  default:
+    name: serverfiles

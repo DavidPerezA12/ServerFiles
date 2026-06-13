@@ -1,0 +1,41 @@
+{
+  "name": "serverfiles",
+  "version": "0.1.0",
+  "description": "Dotfiles for your home server.",
+  "type": "module",
+  "bin": {
+    "serverfiles": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "test": "node --test --import tsx tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "keywords": [
+    "macos",
+    "server",
+    "homelab",
+    "dotfiles",
+    "colima",
+    "docker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "execa": "^9.5.2",
+    "fs-extra": "^11.2.0",
+    "yaml": "^2.6.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

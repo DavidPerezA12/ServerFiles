@@ -1,0 +1,14 @@
+version: 1
+serverName: mac-mini
+root: "{{ROOT}}"
+stacks: []
+ports:
+  caddyHttp: 80
+  caddyHttps: 443
+  postgres: 5432
+  redis: 6379
+  mongodb: 27017
+  adminer: 8080
+  uptimeKuma: 3001
+  filebrowser: 8082
+  immich: 2283
