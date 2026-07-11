@@ -71,3 +71,5 @@ serverfiles enable-autostart
 ```
 
 The generated launchd job includes the common Homebrew paths for Apple Silicon and Intel Macs. If Docker was installed somewhere else, make sure `docker` is available to launchd.
+
+The launchd job starts Colima first when it is not already running, so the stack comes back up after a reboot without manual steps. Colima can take a minute to boot; check `~/.serverfiles/logs/launchd.log` if services are not up yet.
