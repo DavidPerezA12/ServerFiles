@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from "fs-extra";
+import path from "node:path";
 import { Command } from "commander";
 import { addCommand } from "./commands/add.js";
 import { autostartCommand } from "./commands/autostart.js";
@@ -10,15 +12,20 @@ import { restartCommand } from "./commands/restart.js";
 import { startCommand } from "./commands/start.js";
 import { statusCommand } from "./commands/status.js";
 import { stopCommand } from "./commands/stop.js";
+import { packageRoot } from "./core/paths.js";
 import { ServerfilesError } from "./core/preflight.js";
 import { logger } from "./utils/logger.js";
+
+const packageJson = (await fs.readJson(path.join(packageRoot, "package.json"))) as {
+  version: string;
+};
 
 const program = new Command();
 
 program
   .name("serverfiles")
   .description("Dotfiles for your home server.")
-  .version("0.1.0");
+  .version(packageJson.version);
 
 program.addCommand(doctorCommand);
 program.addCommand(initCommand);

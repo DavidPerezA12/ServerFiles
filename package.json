@@ -6,6 +6,13 @@
   "bin": {
     "serverfiles": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",

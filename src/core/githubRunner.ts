@@ -100,10 +100,7 @@ export async function writeGitHubRunnerPlan(plan: GitHubRunnerPlan) {
 }
 
 function renderRunnerReadme(plan: Omit<GitHubRunnerPlan, "readme">) {
-  const configTarget =
-    plan.scope === "repo"
-      ? `https://github.com/${plan.target}`
-      : `https://github.com/${plan.target}`;
+  const configTarget = `https://github.com/${plan.target}`;
 
   return `# GitHub Actions runner: ${plan.target}
 
