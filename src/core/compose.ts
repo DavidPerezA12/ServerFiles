@@ -58,8 +58,12 @@ export function applyConfigToCompose(compose: ComposeDocument, config: Serverfil
   return compose;
 }
 
-export async function mergeComposeTemplate(templateName: string, config?: ServerfilesConfig) {
-  const current = await readCompose();
+export async function mergeComposeTemplate(
+  templateName: string,
+  config?: ServerfilesConfig,
+  composeFile = paths.compose
+) {
+  const current = await readCompose(composeFile);
   const addition = YAML.parse(await fs.readFile(templatePath(templateName), "utf8")) as ComposeDocument;
 
   const merged: ComposeDocument = {
@@ -79,7 +83,7 @@ export async function mergeComposeTemplate(templateName: string, config?: Server
     }
   };
 
-  await writeCompose(config ? applyConfigToCompose(merged, config) : merged);
+  await writeCompose(config ? applyConfigToCompose(merged, config) : merged, composeFile);
   return {
     addedServices: Object.keys(addition.services ?? {}).filter(
       (service) => !(current.services ?? {})[service]
