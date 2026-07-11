@@ -1,11 +1,9 @@
-import { mergeComposeTemplate } from "../core/compose.js";
-import { addStackToConfig, readConfig } from "../core/config.js";
-import { ensureInitialized } from "../core/preflight.js";
+import { addStack } from "./stack.js";
 
 export async function addFilesStack() {
-  await ensureInitialized();
-  const config = await readConfig();
-  const result = await mergeComposeTemplate("docker-compose.files.yml", config);
-  await addStackToConfig("files");
-  return result;
+  return addStack({
+    name: "files",
+    template: "docker-compose.files.yml",
+    dataDirs: ["files", "filebrowser/database", "filebrowser/config"]
+  });
 }

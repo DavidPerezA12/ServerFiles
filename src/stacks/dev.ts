@@ -1,11 +1,9 @@
-import { mergeComposeTemplate } from "../core/compose.js";
-import { addStackToConfig, readConfig } from "../core/config.js";
-import { ensureInitialized } from "../core/preflight.js";
+import { addStack } from "./stack.js";
 
 export async function addDevStack() {
-  await ensureInitialized();
-  const config = await readConfig();
-  const result = await mergeComposeTemplate("docker-compose.dev.yml", config);
-  await addStackToConfig("dev");
-  return result;
+  return addStack({
+    name: "dev",
+    template: "docker-compose.dev.yml",
+    dataDirs: ["postgres", "redis", "mongodb", "uptime-kuma"]
+  });
 }

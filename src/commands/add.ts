@@ -28,4 +28,7 @@ export const addCommand = new Command("add")
     for (const service of result.existingServices) {
       logger.info(`Service already exists: ${service}`);
     }
+    if (result.addedServices.length > 0) {
+      logger.info("Run `serverfiles start` to start the new services.");
+    }
   });

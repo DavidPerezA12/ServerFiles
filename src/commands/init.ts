@@ -5,7 +5,7 @@ import { paths, templatePath } from "../core/paths.js";
 import { ensureDirectories, writeFileIfMissing } from "../utils/fs.js";
 import { logger } from "../utils/logger.js";
 
-const dataDirs = ["caddy", "postgres", "redis", "mongodb", "uptime-kuma", "adminer"];
+const dataDirs = ["caddy"];
 
 export const initCommand = new Command("init")
   .description("Create the ~/.serverfiles structure and initial config")
