@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import YAML from "yaml";
 import { ZodError } from "zod";
-import { paths } from "./paths.js";
+import { paths, templatePath } from "./paths.js";
 import { ServerfilesError } from "./preflight.js";
 import { serverfilesConfigSchema, type ServerfilesConfig } from "../utils/validators.js";
 
@@ -31,4 +31,10 @@ export async function addStackToConfig(stack: string) {
     config.stacks.push(stack);
     await writeConfig(config);
   }
+}
+
+export async function readDefaultPorts(): Promise<Record<string, number>> {
+  const raw = await fs.readFile(templatePath("config.yml"), "utf8");
+  const parsed = YAML.parse(raw) as { ports?: Record<string, number> };
+  return parsed.ports ?? {};
 }

@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { composePs } from "../core/docker.js";
+import { readCompose } from "../core/compose.js";
 import { readConfig } from "../core/config.js";
 import { paths } from "../core/paths.js";
 import { ensureReadyForCompose } from "../core/preflight.js";
@@ -13,13 +14,24 @@ export const statusCommand = new Command("status")
     logger.line(await composePs(paths.compose));
 
     const config = await readConfig();
+    const services = (await readCompose()).services ?? {};
+    const urlLines: Array<[service: string, line: string]> = [
+      ["caddy", `Caddy HTTP: http://localhost:${config.ports.caddyHttp}`],
+      ["caddy", `Caddy HTTPS: https://localhost:${config.ports.caddyHttps}`],
+      ["postgres", `PostgreSQL: localhost:${config.ports.postgres}`],
+      ["redis", `Redis: localhost:${config.ports.redis}`],
+      ["mongodb", `MongoDB: localhost:${config.ports.mongodb}`],
+      ["adminer", `Adminer: http://localhost:${config.ports.adminer}`],
+      ["uptime-kuma", `Uptime Kuma: http://localhost:${config.ports.uptimeKuma}`],
+      ["filebrowser", `File Browser: http://localhost:${config.ports.filebrowser}`],
+      ["immich-server", `Immich: http://localhost:${config.ports.immich}`]
+    ];
+
     logger.line();
     logger.line("URLs and ports");
-    logger.line(`PostgreSQL: localhost:${config.ports.postgres}`);
-    logger.line(`Redis: localhost:${config.ports.redis}`);
-    logger.line(`MongoDB: localhost:${config.ports.mongodb}`);
-    logger.line(`Adminer: http://localhost:${config.ports.adminer}`);
-    logger.line(`Uptime Kuma: http://localhost:${config.ports.uptimeKuma}`);
-    logger.line(`Caddy HTTP: http://localhost:${config.ports.caddyHttp}`);
-    logger.line(`Caddy HTTPS: https://localhost:${config.ports.caddyHttps}`);
+    for (const [service, line] of urlLines) {
+      if (services[service]) {
+        logger.line(line);
+      }
+    }
   });

@@ -37,8 +37,8 @@ Run:
 serverfiles doctor
 ```
 
-`doctor` checks the default core and `dev` ports. For an optional or customized
-port, inspect it directly:
+`doctor` checks every port configured in `~/.serverfiles/config.yml`, or the
+default ports when no config exists yet. To inspect a port directly:
 
 ```sh
 lsof -nP -iTCP:8082 -sTCP:LISTEN
