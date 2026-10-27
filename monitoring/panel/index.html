@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Mac mini</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Mac mini">
+<style>
+:root{
+ --page:#0d0d0d;--surface:#1a1a19;--raised:#242422;--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.09);
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--track:#26323f;
+ --good:#0ca30c;--warn:#fab219;--crit:#d03b3b;
+ font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--page);font-synthesis:none;-webkit-font-smoothing:antialiased
+}
+*{box-sizing:border-box}body{margin:0}
+main{width:100%;margin:0;padding:18px 16px 32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:0}
+.note{color:var(--muted);font-size:12.5px;line-height:1.45}
+.num{font-variant-numeric:tabular-nums}
+
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}
+h1{font-size:24px;font-weight:650;letter-spacing:-.4px;margin:0}
+.sub{color:var(--muted);font-size:13px;margin-top:3px}
+.live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);white-space:nowrap}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--good)}
+.stale .pulse{background:var(--crit)}
+@media(prefers-reduced-motion:no-preference){.pulse{animation:pulse 2s ease-in-out infinite}.stale .pulse{animation:none}@keyframes pulse{50%{opacity:.35}}}
+
+.verdict{display:flex;gap:12px;align-items:center;padding:11px 14px;margin-bottom:12px}
+.verdict .icon{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#0b0b0b;background:var(--good)}
+.verdict.warn .icon{background:var(--warn)}.verdict.crit .icon{background:var(--crit);color:#fff}
+.verdict b{font-size:15px;font-weight:620;margin-right:10px}
+.verdict span{color:var(--ink2);font-size:13.5px}
+
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.tile{padding:14px 16px 15px}
+.tile-head{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink2);font-size:13px;font-weight:550}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:550;color:var(--ink2);white-space:nowrap}
+.status i{font-style:normal;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:800;color:#0b0b0b;background:var(--good)}
+.status.warn i{background:var(--warn)}.status.crit i{background:var(--crit);color:#fff}.status.none i{background:var(--axis);color:var(--ink2)}
+.big{font-size:36px;font-weight:620;letter-spacing:-1px;line-height:1;margin:12px 0 2px;white-space:nowrap}
+.big small{font-size:15px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:3px}
+.meter{display:flex;gap:2px;height:6px;margin:12px 0 9px;border-radius:3px;overflow:hidden;background:var(--track)}
+.meter span{display:block;height:100%;background:var(--s1);transition:width .4s}
+.meter.warn span{background:var(--warn)}.meter.crit span{background:var(--crit)}
+.meter.stack{background:var(--axis)}
+.keys{display:flex;flex-wrap:wrap;gap:3px 10px;font-size:12px;color:var(--ink2)}
+.keys span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.keys i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.lines{font-size:12.5px;color:var(--muted);line-height:1.55}
+.lines b{color:var(--ink2);font-weight:550}
+
+.cpu{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px;padding:16px 18px;margin-bottom:12px}
+.panel-title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+h2{font-size:15px;font-weight:620;margin:0;letter-spacing:-.1px}
+.clusters{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.cluster-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.cluster-head b{font-size:13.5px;font-weight:600}
+.cores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.core{text-align:center;font-size:12px;color:var(--muted)}
+.core .col{height:92px;background:var(--track);border-radius:4px;position:relative;overflow:hidden;margin-bottom:6px}
+.core .col span{position:absolute;left:0;right:0;bottom:0;background:var(--s1);border-radius:4px 4px 0 0;transition:height .4s}
+.core b{display:block;color:var(--ink);font-size:14px;font-weight:600}
+.heat{position:relative;height:178px;outline:none}
+.heat svg,.plot svg{display:block;width:100%;height:100%;overflow:visible}
+.heat text,.plot text{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.scale{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);justify-content:flex-end}
+.scale i{display:inline-block;width:120px;height:8px;border-radius:2px}
+
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 10px}
+.range{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px}
+.range button{font:inherit;font-size:13px;color:var(--ink2);background:none;border:0;border-radius:6px;padding:5px 12px;cursor:pointer}
+.range button:hover{background:var(--raised)}
+.range button[aria-pressed=true]{background:#33332f;color:var(--ink);font-weight:600}
+
+.charts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;transition:opacity .3s}
+.chart{padding:12px 14px 6px}
+.chart-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.chart-title b{font-size:14px;font-weight:600}
+.chart-title span{font-size:12px;color:var(--muted);text-align:right}
+.readout{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;min-height:22px;font-size:12px;color:var(--ink2)}
+.readout div{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.readout b{font-size:15px;font-weight:620;color:var(--ink)}
+.readout small{color:var(--muted)}
+.key{display:inline-block;width:12px;height:2px;border-radius:1px;align-self:center}
+.plot{position:relative;height:170px;margin-top:4px;outline:none;touch-action:pan-y}
+.plot:focus-visible,.heat:focus-visible{box-shadow:0 0 0 2px var(--s1);border-radius:6px}
+.history-note{font-size:11px;color:var(--muted);margin-top:3px;min-height:16px}
+.tip{position:absolute;top:4px;pointer-events:none;background:#2a2a28;border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:12px;color:var(--ink);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.45);display:none;z-index:3}
+.tip div{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.tip .when{color:var(--muted);margin-bottom:3px}
+.tip .key{width:10px}
+details{margin-top:2px}
+summary{font-size:12px;color:var(--muted);cursor:pointer;padding:4px 0;width:max-content}
+summary:hover{color:var(--ink2)}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:500}
+
+.bottom{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px;margin-top:12px}
+.sensors{padding:16px 18px}
+.srow{display:grid;grid-template-columns:170px minmax(0,1fr) 120px;gap:14px;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid)}
+.srow:last-of-type{border-bottom:0}
+.sname{font-size:13px}.sname small{display:block;color:var(--muted);font-size:11.5px}
+.strack{height:26px}
+.strack svg{display:block;width:100%;height:100%;overflow:visible}
+.strack text{fill:var(--muted);font-size:10.5px}
+.sval{text-align:right;font-size:13px;font-variant-numeric:tabular-nums}.sval small{display:block;color:var(--muted);font-size:11.5px}
+.apps{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
+.apps h3{font-size:13.5px;font-weight:600;margin:0 0 2px}
+.apps .note{margin-bottom:10px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;margin-bottom:9px}
+.row .name{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .val{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right}
+.row .bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--track);overflow:hidden}
+.row .bar span{display:block;height:100%;background:var(--s1);border-radius:0 3px 3px 0;transition:width .4s}
+
+.facts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--grid);border-radius:12px;overflow:hidden;margin-top:12px;border:1px solid var(--border)}
+.facts div{background:var(--surface);padding:12px 14px;font-size:12px;color:var(--muted)}
+.facts b{display:block;font-size:15px;font-weight:580;color:var(--ink);margin:4px 0 2px;font-variant-numeric:tabular-nums}
+footer{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+a{color:#6da7ec;text-decoration:none}a:hover{text-decoration:underline}
+
+@media(max-width:1500px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1250px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.cpu,.bottom{grid-template-columns:1fr}}
+@media(max-width:760px){main{padding:14px 12px 28px}.charts,.apps{grid-template-columns:1fr}.tiles,.facts{grid-template-columns:repeat(2,minmax(0,1fr))}.clusters{grid-template-columns:1fr}.srow{grid-template-columns:120px minmax(0,1fr) 84px;gap:8px}.big{font-size:30px}h1{font-size:21px}.verdict b{display:block}}
+@media(max-width:440px){.tiles{grid-template-columns:1fr}.section-head{flex-direction:column;align-items:flex-start}.range{width:100%}.range button{flex:1}}
+</style>
+<main>
+<header>
+ <div><h1 id="name">Mac mini</h1><div class="sub" id="machine">Conectando…</div></div>
+ <div class="live" id="live" role="status"><span class="pulse"></span><span id="liveText">Conectando…</span></div>
+</header>
+
+<section class="card verdict" id="verdict" aria-live="polite"><div class="icon" id="verdictIcon">·</div><div><b id="verdictTitle">Cargando…</b><span id="verdictText">Leyendo los sensores del Mac.</span></div></section>
+
+<section class="tiles" aria-label="Ahora mismo">
+ <article class="card tile"><div class="tile-head">CPU <span class="status" id="cpuStatus"></span></div><div class="big" id="cpuNow">—</div><div class="meter" id="cpuMeter"><span style="width:0"></span></div><div class="lines" id="cpuNote"></div></article>
+ <article class="card tile"><div class="tile-head">GPU <span class="status" id="gpuStatus"></span></div><div class="big" id="gpuNow">—</div><div class="meter" id="gpuMeter"><span style="width:0"></span></div><div class="lines" id="gpuNote"></div></article>
+ <article class="card tile"><div class="tile-head">Memoria <span class="status" id="memStatus"></span></div><div class="big" id="memNow">—</div>
+  <div class="meter stack" id="memMeter"><span style="width:0;background:var(--s1)"></span><span style="width:0;background:var(--s2)"></span><span style="width:0;background:var(--s3)"></span></div>
+  <div class="keys"><span><i style="background:var(--s1)"></i>Apps</span><span><i style="background:var(--s2)"></i>Sistema</span><span><i style="background:var(--s3)"></i>Comprimida</span><span><i style="background:var(--axis)"></i>Caché y libre</span></div></article>
+ <article class="card tile"><div class="tile-head">Almacenamiento <span class="status" id="diskStatus"></span></div><div class="big" id="diskNow">—</div><div class="meter" id="diskMeter"><span style="width:0"></span></div><div class="lines" id="diskNote"></div></article>
+ <article class="card tile"><div class="tile-head">Temperatura CPU <span class="status" id="tempStatus"></span></div><div class="big" id="tempNow">—</div><div class="meter" id="tempMeter"><span style="width:0"></span></div><div class="lines" id="tempNote"></div></article>
+ <article class="card tile"><div class="tile-head">Temperatura GPU <span class="status" id="gpuTempStatus"></span></div><div class="big" id="gpuTempNow">—</div><div class="meter" id="gpuTempMeter"><span style="width:0"></span></div><div class="lines" id="gpuTempNote"></div></article>
+ <article class="card tile"><div class="tile-head">Ventilador <span class="status" id="fanStatus"></span></div><div class="big" id="fanNow">—</div><div class="meter" id="fanMeter"><span style="width:0"></span></div><div class="lines" id="fanNote"></div></article>
+ <article class="card tile"><div class="tile-head">Consumo <span class="status" id="powerStatus"></span></div><div class="big" id="powerNow">—</div><div class="meter" id="powerMeter"><span style="width:0"></span></div><div class="lines" id="powerNote"></div></article>
+</section>
+
+<section class="card cpu" aria-label="Núcleos">
+ <div>
+  <div class="panel-title"><h2>Núcleos ahora</h2><span class="note">% del tiempo activo · media de 5 s</span></div>
+  <div class="clusters" id="clusters"></div>
+ </div>
+ <div>
+  <div class="panel-title"><h2>Actividad por núcleo</h2><span class="scale"><span>0 %</span><i id="scaleBar"></i><span>100 %</span></span></div>
+  <div class="heat" id="heat" tabindex="0" role="img" aria-label="Actividad de cada núcleo a lo largo del periodo. Flechas para recorrer."><svg><g class="static"></g><g class="cur"></g></svg><div class="tip"></div></div>
+  <details><summary>Ver como tabla</summary><div id="heatTable"></div></details>
+ </div>
+</section>
+
+<div class="section-head"><h2>Evolución</h2>
+ <div class="range" role="group" aria-label="Periodo"><button data-range="300">5 min</button><button data-range="3600">1 h</button><button data-range="21600">6 h</button><button data-range="86400">24 h</button></div></div>
+<section class="charts" id="charts"></section>
+
+<section class="bottom">
+ <article class="card sensors"><div class="panel-title"><h2>Sensores de temperatura</h2><span class="note" id="sensorCount"></span></div><div id="sensorRows"></div><p class="note">Media y máximo de los sensores HID de cada zona. Los nombres originales están en la tabla; no se asigna un sensor a un núcleo sin conocer esa correspondencia.</p>
+  <details><summary>Ver todos los sensores</summary><div id="sensorTable"></div></details></article>
+ <article class="card apps">
+  <div><h3>Qué usa la CPU</h3><div class="note">Media de 30 s · 100 % = un núcleo</div><div id="appsCpu"></div></div>
+  <div><h3>Qué usa la memoria</h3><div class="note">Memoria residente de cada app</div><div id="appsMem"></div></div>
+ </article>
+</section>
+
+<section class="facts" id="facts"></section>
+<footer><span>Privado por Tailscale · datos reales de Netdata, macmon, sensores de macOS y SMART · solo lectura, no controla el ventilador</span><a href="/" target="_blank" rel="noopener">Abrir Netdata completo ↗</a></footer>
+</main>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const ok=v=>typeof v==='number'&&Number.isFinite(v);
+const nf=(n,d=0)=>ok(n)?n.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const auto=v=>!ok(v)?'—':v>=100?nf(v,0):v>=10?nf(v,1):v>0&&v<.01?nf(v,3):nf(v,2);
+const COLORS=['#3987e5','#d95926','#199e70','#c98500'],SURFACE='#1a1a19',GRID='#2c2c2a',AXIS='#383835';
+const THERMAL=['Normal','Algo de calor','Calor alto','Crítico'];
+const bytes=b=>!ok(b)?'—':b>=1e12?nf(b/1e12,b>=1e14?0:1)+' TB':b>=1e9?nf(b/1e9,0)+' GB':nf(b/1e6,0)+' MB';
+const clock=(t,sec)=>new Date(t*1000).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',...(sec?{second:'2-digit'}:{})});
+const duration=s=>{if(!ok(s))return'—';const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?`${d} d ${h} h`:h?`${h} h ${m} min`:`${m} min`};
+
+let savedRange=300;try{savedRange=+(localStorage.getItem('range')||300)}catch{}
+let D=null,range=savedRange,cursor=null,cursorOwner=null,busy=false,lastOk=0;
+if(![300,3600,21600,86400].includes(range))range=300;
+
+// One unit per chart; never two scales on one plot.
+const CHARTS=[
+ {id:'use',title:'Uso de CPU y GPU',unit:'%',series:[['cpu.cpu','CPU'],['gpu.gpu','GPU']],dom:()=>[0,100],fmt:v=>nf(v,0)},
+ {id:'freq',title:'Frecuencias',unit:'MHz',series:[['local.pf','Rendimiento'],['local.ef','Eficiencia'],['local.gf','GPU']],dom:m=>[0,Math.max(1000,m)],fmt:v=>nf(v,0)},
+ {id:'temp',title:'Temperaturas',unit:'°C',note:'Media de cada zona',series:[['local.pa','Rendimiento'],['local.ea','Eficiencia'],['local.g','GPU'],['local.ssd','SSD']],dom:m=>[20,Math.max(100,m)],fmt:v=>nf(v,0)},
+ {id:'power',title:'Consumo informado',unit:'W',note:'Estimación del SMC y contadores del chip',series:[['local.sw','Sistema (SMC)'],['local.cw','CPU'],['local.gw','GPU']],dom:m=>[0,Math.max(5,m)],fmt:auto},
+ {id:'mem',title:'Memoria',unit:'GB',series:[['local.ram','RAM en uso'],['swap.swap','Swap']],dom:m=>[0,Math.max(D.machine.ramGiB||0,m)],fmt:v=>nf(v,1)},
+ {id:'fan',title:'Ventilador',unit:'RPM',series:[['fan.fan','Ventilador']],dom:m=>[0,Math.max(fanMax()||0,m,1000)],fmt:v=>nf(v,0)},
+ {id:'net',title:'Red',unit:'Mbit/s',series:[['net.down','Descarga'],['net.up','Subida']],dom:m=>[0,Math.max(1,m)],fmt:auto},
+ {id:'disk',title:'Disco',unit:'MB/s',note:'SSD interno',series:[['disk.read','Lectura'],['disk.write','Escritura']],dom:m=>[0,Math.max(1,m)],fmt:auto},
+ {id:'swapio',title:'Swap ↔ SSD',unit:'MB/s',note:'Memoria que macOS mueve al disco',series:[['swapio.out','Hacia el SSD'],['swapio.in','Desde el SSD']],dom:m=>[0,Math.max(1,m)],fmt:auto},
+];
+const fanMax=()=>D?.detail?.sensors?.fan?.max;
+const pts=key=>{const [a,b]=key.split('.');return D.series?.[a]?.[b]||[]};
+const near=(points,t,tol)=>{let best=null,d=Infinity;for(const p of points){if(p[1]==null)continue;const x=Math.abs(p[0]-t);if(x<d){d=x;best=p}}return best&&d<=tol?best:null};
+const lastPoint=points=>{for(let i=points.length-1;i>=0;i--)if(points[i][1]!=null)return points[i];return null};
+function niceTicks(lo,hi,count=4){
+ const span=hi-lo||1,raw=span/count,mag=10**Math.floor(Math.log10(raw)),n=raw/mag;
+ const step=(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*mag,ticks=[];
+ for(let v=Math.floor(lo/step)*step;v<=Math.ceil(hi/step)*step+step/2;v+=step)ticks.push(+v.toFixed(6));
+ return ticks;
+}
+const compact=v=>Math.abs(v)>=1000?nf(v/1000,v%1000?1:0)+' k':nf(v,v%1?1:0);
+const xStep=()=>range<=300?60:range<=3600?900:range<=21600?3600:14400;
+
+// ---------- line charts ----------
+function buildCharts(){
+ $('charts').innerHTML=CHARTS.map(c=>`<article class="card chart"><div class="chart-title"><b>${c.title}</b><span>${c.note?esc(c.note)+' · ':''}${esc(c.unit)}</span></div><div class="readout" id="ro-${c.id}"></div><div class="plot" id="pl-${c.id}" tabindex="0" role="img" aria-label="${esc(c.title)} en el periodo elegido. Flechas para recorrer."><svg><g class="static"></g><g class="cur"></g></svg><div class="tip"></div></div><div class="history-note" id="hn-${c.id}"></div><details><summary>Ver como tabla</summary><div id="tb-${c.id}"></div></details></article>`).join('');
+ for(const c of CHARTS)wire($('pl-'+c.id),c.id);
+ wire($('heat'),'heat');
+ new ResizeObserver(()=>D&&drawAll()).observe(document.querySelector('main'));
+}
+function wire(el,owner){
+ const move=e=>{if(!D)return;const g=geom(el,owner),r=el.getBoundingClientRect(),x=Math.min(g.L+g.w,Math.max(g.L,e.clientX-r.left));setCursor(D.at-range+(x-g.L)/g.w*range,owner)};
+ el.addEventListener('pointermove',move);el.addEventListener('pointerdown',move);
+ el.addEventListener('pointerleave',()=>setCursor(null));el.addEventListener('blur',()=>setCursor(null));
+ el.addEventListener('keydown',e=>{if(!D)return;
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const base=cursor??D.at;setCursor(Math.min(D.at,Math.max(D.at-range,base+(e.key==='ArrowLeft'?-1:1)*range/60)),owner)}
+  if(e.key==='Escape')setCursor(null)});
+}
+function geom(el,owner){const w=el.clientWidth,h=el.clientHeight,L=owner==='heat'?34:42,R=10,T=6,B=20;return{W:w,H:h,L,T,w:Math.max(10,w-L-R),h:h-T-B}}
+function xAxis(g,X,t0){let s='';const st=xStep();for(let t=Math.ceil(t0/st)*st;t<=D.at;t+=st){const x=X(t);if(x<g.L+16||x>g.L+g.w-16)continue;s+=`<text x="${x}" y="${g.H-3}" text-anchor="middle">${clock(t)}</text>`}return s}
+
+function drawChart(c){
+ const pl=$('pl-'+c.id),g=geom(pl,c.id),t0=D.at-range;
+ c.data=c.series.map(([k])=>pts(k).filter(p=>p[0]>=t0-1));
+ const vals=c.data.flat().map(p=>p[1]).filter(ok);
+ const available=c.data.flat().filter(p=>ok(p[1])).map(p=>p[0]);
+ $('hn-'+c.id).textContent=available.length?`Datos desde ${clock(Math.min(...available))} · última muestra ${clock(Math.max(...available),true)}`:'Sin muestras en este periodo';
+ const [lo,hiRaw]=c.dom(vals.length?Math.max(...vals):0),ticks=niceTicks(lo,hiRaw),hi=ticks.at(-1);
+ const X=t=>g.L+(t-t0)/range*g.w,Y=v=>g.T+g.h-(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*g.h;
+ Object.assign(c,{g,X,Y,lo});
+ let s='';
+ for(const v of ticks)s+=`<line x1="${g.L}" x2="${g.L+g.w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===lo?AXIS:GRID}" shape-rendering="crispEdges"/><text x="${g.L-7}" y="${Y(v)+4}" text-anchor="end">${compact(v)}</text>`;
+ s+=xAxis(g,X,t0);
+ c.data.forEach((points,i)=>{
+  const segs=[];let seg=null;
+  for(const p of points){if(p[1]==null){seg=null;continue}if(!seg)segs.push(seg=[]);seg.push([X(p[0]).toFixed(1),Y(p[1]).toFixed(1)])}
+  for(const sg of segs){const line='M'+sg.map(q=>q.join(' ')).join('L');
+   if(c.data.length===1)s+=`<path d="${line}L${sg.at(-1)[0]} ${Y(lo)}L${sg[0][0]} ${Y(lo)}Z" fill="${COLORS[i]}" fill-opacity=".1"/>`;
+   s+=`<path d="${line}" fill="none" stroke="${COLORS[i]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`}
+  const last=segs.at(-1)?.at(-1);if(last)s+=`<circle class="end" cx="${last[0]}" cy="${last[1]}" r="4" fill="${COLORS[i]}" stroke="${SURFACE}" stroke-width="2"/>`;
+ });
+ pl.querySelector('.static').innerHTML=s;
+ // Table twin
+ $('tb-'+c.id).innerHTML=`<table><tr><th>Serie</th><th>Ahora</th><th>Mín.</th><th>Media</th><th>Máx.</th></tr>${c.data.map((points,i)=>{const v=points.map(p=>p[1]).filter(ok),l=lastPoint(points);return `<tr><td>${esc(c.series[i][1])}</td>${v.length?[l[1],Math.min(...v),v.reduce((a,b)=>a+b,0)/v.length,Math.max(...v)].map(x=>`<td>${c.fmt(x)} ${esc(c.unit)}</td>`).join(''):'<td colspan="4">Sin datos en este periodo</td>'}</tr>`}).join('')}</table>`;
+ drawChartCursor(c);
+}
+function drawChartCursor(c){
+ const pl=$('pl-'+c.id),tip=pl.querySelector('.tip'),{g,X,Y}=c,tol=Math.max(16,range/POINTS*1.5);
+ let s='';const hits=cursor==null?[]:c.data.map((p,i)=>[near(p,cursor,tol),i]).filter(([p])=>p);
+ pl.querySelectorAll('.end').forEach(e=>e.style.display=cursor==null?'':'none');
+ if(cursor!=null){const x=X(cursor);s+=`<line x1="${x}" x2="${x}" y1="${g.T}" y2="${g.T+g.h}" stroke="#6b6a65"/>`;
+  for(const [p,i] of hits)s+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4" fill="${COLORS[i]}" stroke="${SURFACE}" stroke-width="2"/>`;}
+ pl.querySelector('.cur').innerHTML=s;
+ if(cursor!=null&&cursorOwner===c.id&&hits.length){
+  tip.innerHTML=`<div class="when">${clock(hits[0][0][0],range<=3600)}</div>`+hits.map(([p,i])=>`<div><span class="key" style="background:${COLORS[i]}"></span><b>${c.fmt(p[1])} ${esc(c.unit)}</b>&nbsp;${esc(c.series[i][1])}</div>`).join('');
+  tip.style.display='block';const x=X(cursor),tw=tip.offsetWidth;tip.style.left=(x+12+tw>g.W?x-12-tw:x+12)+'px';
+ }else tip.style.display='none';
+ const shown=c.data.map(points=>cursor!=null?near(points,cursor,tol):lastPoint(points));
+ $('ro-'+c.id).innerHTML=shown.map((p,i)=>`<div>${c.series.length>1?`<span class="key" style="background:${COLORS[i]}"></span>${esc(c.series[i][1])}`:(cursor!=null?'En el cursor':'Último')} <b>${p?c.fmt(p[1]):'—'}</b><small>${esc(c.unit)}</small></div>`).join('')+(cursor!=null?`<div><small>${clock(cursor,range<=3600)}</small></div>`:'');
+}
+const POINTS=150;
+
+// ---------- per-core heatmap ----------
+const RAMP=[[0,[31,38,48]],[.08,[24,79,149]],[.3,[37,106,191]],[.55,[57,135,229]],[.8,[109,167,236]],[1,[183,211,246]]];
+function heatColor(v){const x=Math.max(0,Math.min(1,v/100));for(let i=1;i<RAMP.length;i++){const [a,ca]=RAMP[i-1],[b,cb]=RAMP[i];if(x<=b){const f=(x-a)/(b-a);return `rgb(${ca.map((c,j)=>Math.round(c+(cb[j]-c)*f)).join(',')})`}}return 'rgb(183,211,246)'}
+$('scaleBar').style.background=`linear-gradient(90deg,${[0,10,30,55,80,100].map(v=>heatColor(v)).join(',')})`;
+function coreList(){const m=D.machine,e=m.eCores||0,p=m.pCores||0;
+ // macmon lists efficiency cores first (cpu0-3 on this Mac), then performance cores.
+ return [...Array(p)].map((_,i)=>({idx:e+i,label:'R'+(i+1),name:'Rendimiento '+(i+1)})).concat([...Array(e)].map((_,i)=>({idx:i,label:'E'+(i+1),name:'Eficiencia '+(i+1)})))}
+const heat={};
+function drawHeat(){
+ const el=$('heat'),g=geom(el,'heat'),t0=D.at-range,cores=coreList(),rows=cores.length||1,rh=g.h/rows;
+ const X=t=>g.L+(t-t0)/range*g.w;Object.assign(heat,{g,X,cores,rh});
+ const bw=g.w/range*Math.max(5,range/POINTS);let s='';
+ heat.data=cores.map(c=>pts('local.c'+c.idx).filter(p=>p[0]>=t0-1));
+ heat.data.forEach((points,r)=>{
+  s+=`<text x="${g.L-7}" y="${g.T+r*rh+rh/2+4}" text-anchor="end">${cores[r].label}</text>`;
+ for(const p of points){if(p[1]==null)continue;const x=Math.max(g.L,X(p[0])-bw/2),w=Math.max(0,Math.min(bw+.6,g.L+g.w-x));s+=`<rect x="${x.toFixed(1)}" y="${(g.T+r*rh+1).toFixed(1)}" width="${w.toFixed(1)}" height="${(rh-2).toFixed(1)}" fill="${heatColor(p[1])}"/>`}
+ });
+ if(cores.length)s+=`<line x1="${g.L}" x2="${g.L+g.w}" y1="${g.T+(D.machine.pCores||0)*rh}" y2="${g.T+(D.machine.pCores||0)*rh}" stroke="${SURFACE}" stroke-width="3"/>`;
+ s+=xAxis(g,X,t0);
+ if(!heat.data.some(p=>p.some(q=>q[1]!=null)))s+=`<text x="${g.L+g.w/2}" y="${g.T+g.h/2}" text-anchor="middle">Sin datos de núcleos en este periodo</text>`;
+ el.querySelector('.static').innerHTML=s;
+ $('heatTable').innerHTML=`<table><tr><th>Núcleo</th><th>Ahora</th><th>Media</th><th>Máx.</th></tr>${cores.map((c,r)=>{const v=heat.data[r].map(p=>p[1]).filter(ok),l=lastPoint(heat.data[r]);return `<tr><td>${c.name}</td>${v.length?`<td>${nf(l[1],0)} %</td><td>${nf(v.reduce((a,b)=>a+b,0)/v.length,0)} %</td><td>${nf(Math.max(...v),0)} %</td>`:'<td colspan="3">Sin datos</td>'}</tr>`}).join('')}</table>`;
+ drawHeatCursor();
+}
+function drawHeatCursor(){
+ const el=$('heat'),tip=el.querySelector('.tip'),{g,X,cores,rh}=heat;let s='';
+ if(cursor!=null){const x=X(cursor);s+=`<line x1="${x}" x2="${x}" y1="${g.T}" y2="${g.T+g.h}" stroke="#f0efec" stroke-opacity=".7"/>`}
+ el.querySelector('.cur').innerHTML=s;
+ const tol=Math.max(16,range/POINTS*1.5);
+ if(cursor!=null&&cursorOwner==='heat'){
+  const hits=cores.map((c,r)=>[c,near(heat.data[r],cursor,tol)]).filter(([,p])=>p);
+  if(hits.length){tip.innerHTML=`<div class="when">${clock(hits[0][1][0],range<=3600)}</div>`+hits.map(([c,p])=>`<div><span class="key" style="background:${heatColor(p[1])};height:8px;width:8px;border-radius:2px"></span><b>${nf(p[1],0)} %</b>&nbsp;${c.name}</div>`).join('');
+   tip.style.display='block';const x=X(cursor),tw=tip.offsetWidth;tip.style.left=(x+12+tw>g.W?x-12-tw:x+12)+'px';return}
+ }
+ tip.style.display='none';
+}
+
+function setCursor(t,owner){cursor=t;cursorOwner=t==null?null:owner;if(!D)return;for(const c of CHARTS)if(c.g)drawChartCursor(c);if(heat.g)drawHeatCursor()}
+function drawAll(){for(const c of CHARTS)drawChart(c);drawHeat()}
+
+// ---------- tiles & panels ----------
+function status(id,level,text){const el=$(id);el.className='status '+(level||'');el.innerHTML=`<i aria-hidden="true">${level==='none'?'–':level?'!':'✓'}</i>${esc(text)}`}
+function meter(id,pct,level){const el=$(id);el.className='meter '+(level||'');el.firstElementChild.style.width=(ok(pct)?Math.max(0,Math.min(100,pct)):0)+'%'}
+const big=(id,v,unit,d=0)=>$(id).innerHTML=ok(v)?`${nf(v,d)}<small>${unit}</small>`:'—';
+
+function paintTiles(){
+ const n=D.now,L=D.local,M=D.detail?.macmon,S=D.detail?.sensors,m=D.machine,p=D.pressure;
+ $('name').textContent=(m.name||'Mac').replace(/^.*?[’']s\s+/,'');
+ $('machine').textContent=[m.chip,m.pCores&&m.eCores?`${m.pCores} núcleos de rendimiento + ${m.eCores} de eficiencia`:m.cores&&`${m.cores} núcleos`,m.gpuCores&&`GPU de ${m.gpuCores} núcleos`,m.ramGiB&&`${nf(m.ramGiB)} GB`,m.macos&&`macOS ${m.macos}`,n.uptime&&`encendido hace ${duration(n.uptime.uptime)}`].filter(Boolean).join(' · ');
+ // CPU
+ const cpu=n.cpu?n.cpu.user+n.cpu.nice+n.cpu.system:null;
+ big('cpuNow',cpu,'%');meter('cpuMeter',cpu,cpu>85?'warn':'');status('cpuStatus',cpu==null?'none':cpu>85?'warn':'',cpu==null?'Sin lectura':cpu>85?'Muy ocupada':'Normal');
+ $('cpuNote').innerHTML=L?.pf!=null?`Rendimiento <b>${nf(L.pf)} MHz</b> · Eficiencia <b>${nf(L.ef)} MHz</b>`:'Frecuencias: sin lectura';
+ // GPU
+ const gpu=n.gpu?.utilization;
+ big('gpuNow',gpu,'%');meter('gpuMeter',gpu,gpu>90?'warn':'');status('gpuStatus',gpu==null?'none':'',gpu==null?'Sin lectura':'Normal');
+ $('gpuNote').innerHTML=[L?.gf!=null&&`<b>${nf(L.gf)} MHz</b>`,L?.gw!=null&&`<b>${auto(L.gw)} W</b>`,L?.g!=null&&`<b>${nf(L.g)} °C</b>`].filter(Boolean).join(' · ')||'Sin datos de macmon';
+ // Memory
+ if(L?.ram!=null&&m.ramGiB){big('memNow',L.ram,`de ${nf(m.ramGiB)} GB`,1);[...$('memMeter').children].forEach((el,i)=>el.style.width=[L.apps,L.wired,L.comp][i]/m.ramGiB*100+'%')}else $('memNow').textContent='—';
+ const pl=p>=4?'crit':p>=2?'warn':p===1?'':'none';status('memStatus',pl,p>=4?'Presión crítica':p>=2?'Con presión':p===1?'Sin presión':'Sin lectura');
+ // Temperature
+ const th=S?.thermal,tc=L?.pa,hot=L?.pm;
+ big('tempNow',tc,'°C');
+ const tl=th===3?'crit':th===2||th===1?'warn':tc==null||th==null?'none':'';
+ meter('tempMeter',tc,tl);status('tempStatus',tl,tc==null?'Sin lectura':THERMAL[th]??'Sin estado térmico');
+ $('tempNote').innerHTML=tc!=null?`Pico <b>${nf(hot)} °C</b> · Eficiencia <b>${nf(L.ea)} °C</b><br>Estado térmico de macOS: <b>${THERMAL[th]??'—'}</b>`:'Sin lectura de sensores';
+ // GPU temperature: display the native HID reading itself, without inferring activity.
+ const gt=S?.groups?.find(g=>g.key==='gpu');
+ big('gpuTempNow',gt?.avg,'°C',1);meter('gpuTempMeter',gt?.avg);
+ status('gpuTempStatus',gt?'':'none',gt?'Sensor HID':'Sin lectura');
+ $('gpuTempNote').innerHTML=gt?`${gt.sensors.length} sensores · máximo <b>${nf(gt.max,1)} °C</b><br>Media de la zona GPU, informada por macOS`:'Sin lectura de sensores GPU';
+ const fan=S?.fan;
+ big('fanNow',fan?.rpm,'RPM');meter('fanMeter',fan?.rpm!=null&&fan?.max?fan.rpm/fan.max*100:null);
+ status('fanStatus',fan?.rpm==null?'none':'',fan?.rpm==null?'Sin lectura':'Solo lectura');
+ $('fanNote').innerHTML=fan?.rpm!=null?`Rango informado: <b>${nf(fan.min)}–${nf(fan.max)} RPM</b><br>No se modifica el control del ventilador`:'Sin lectura del ventilador';
+ // Power
+ big('powerNow',L?.sw,'W',1);
+ const pw=[L?.cw,L?.gw,L?.aw];
+ $('powerMeter').innerHTML=L?.sw?pw.map((v,i)=>`<span style="width:${(v||0)/L.sw*100}%;background:${COLORS[i]}"></span>`).join(''):'<span style="width:0"></span>';
+ $('powerMeter').className='meter stack';
+ status('powerStatus',L?.sw==null?'none':'',L?.sw==null?'Sin lectura':'Estimado SMC');
+ $('powerNote').innerHTML=L?.sw!=null?`<span class="keys"><span><i style="background:${COLORS[0]}"></i>CPU <b>${auto(L.cw)} W</b></span><span><i style="background:${COLORS[1]}"></i>GPU <b>${auto(L.gw)} W</b></span><span><i style="background:${COLORS[2]}"></i>Neural Engine <b>${auto(L.aw)} W</b></span></span>`:'Sin datos de macmon';
+ // Storage
+ const sp=D.space,ssd=D.ssd;
+ if(sp){const freePct=sp.free/sp.total*100;big('diskNow',sp.free/1e9,'GB libres');meter('diskMeter',100-freePct,freePct<5?'crit':freePct<10?'warn':'')}
+ const sl=ssd?.warning||ssd?.passed===false?'crit':sp&&sp.free/sp.total<.1?'warn':ssd?'':'none';
+ status('diskStatus',sl,ssd?.warning?'Aviso del SSD':ssd?.passed===false?'SMART: fallo':sl==='warn'?'Poco espacio':ssd?'SMART normal':'Sin SMART');
+ $('diskNote').innerHTML=[sp&&`<b>${bytes(sp.total-sp.free)}</b> de ${bytes(sp.total)} usados`,[L?.ssd!=null&&`SSD <b>${nf(L.ssd,1)} °C</b>`,ssd&&`desgaste SMART <b>${nf(ssd.used)} %</b>`].filter(Boolean).join(' · ')].filter(Boolean).join('<br>');
+}
+
+function paintCores(){
+ const M=D.detail?.macmon,el=$('clusters');
+ if(!M){el.innerHTML='<div class="note">Sin datos de macmon ahora mismo.</div>';return}
+ const temps=Object.fromEntries((D.detail?.sensors?.groups||[]).map(g=>[g.key,g]));
+ const cluster=(title,cores,freq,temp)=>`<div><div class="cluster-head"><b>${title}</b><span class="note">${nf(freq)} MHz${temp?` · ${nf(temp.avg)} °C`:''}</span></div><div class="cores">${cores.map((c,i)=>`<div class="core" title="${esc(title)} ${i+1}: ${nf(100*c.active_ratio,1)} % activo a ${nf(c.freq_mhz)} MHz"><div class="col"><span style="height:${Math.min(100,100*c.active_ratio)}%"></span></div><b>${nf(100*c.active_ratio,0)} %</b>${nf(c.freq_mhz)} MHz</div>`).join('')}</div></div>`;
+ el.innerHTML=cluster('Rendimiento',M.pcpu_cores,M.pcpu_freq_mhz,temps.p)+cluster('Eficiencia',M.ecpu_cores,M.ecpu_freq_mhz,temps.e);
+}
+
+function paintSensors(){
+ const S=D.detail?.sensors,rows=$('sensorRows');
+ if(!S){rows.innerHTML='<div class="note">Sin lectura de sensores ahora mismo.</div>';$('sensorTable').innerHTML='';$('sensorCount').textContent='';return}
+ const all=S.groups.flatMap(g=>g.sensors.map(s=>[g,...s]));
+ const hi=Math.max(100,...all.map(a=>a[2])),lo=20;
+ $('sensorCount').textContent=`${all.length} sensores · escala ${lo}–${hi} °C`;
+ rows.innerHTML=S.groups.map(g=>{
+  const dots=g.sensors.map(([name,v])=>`<circle cx="${((Math.max(lo,v)-lo)/(hi-lo)*100).toFixed(2)}%" cy="13" r="4.5" fill="${COLORS[0]}" stroke="${SURFACE}" stroke-width="2"><title>${esc(name)}: ${nf(v,1)} °C</title></circle>`).join('');
+  const ticks=[20,40,60,80,100].filter(t=>t<=hi).map(t=>`<line x1="${(t-lo)/(hi-lo)*100}%" x2="${(t-lo)/(hi-lo)*100}%" y1="7" y2="19" stroke="${GRID}"/>`).join('');
+  return `<div class="srow"><div class="sname">${esc(g.label)}<small>${g.sensors.length} ${g.sensors.length>1?'sensores':'sensor'}</small></div><div class="strack"><svg><line x1="0" x2="100%" y1="13" y2="13" stroke="${AXIS}"/>${ticks}${dots}</svg></div><div class="sval"><b>${nf(g.avg)} °C</b><small>máx. ${nf(g.max)} °C</small></div></div>`;
+ }).join('')+`<div class="srow" style="border:0;padding-top:2px"><div></div><div class="strack" style="height:14px"><svg>${[20,40,60,80,100].filter(t=>t<=hi).map(t=>`<text x="${(t-lo)/(hi-lo)*100}%" y="11" text-anchor="middle">${t}</text>`).join('')}</svg></div><div></div></div>`;
+ $('sensorTable').innerHTML=`<table><tr><th>Zona</th><th>Sensor (nombre de macOS)</th><th>°C</th></tr>${all.map(([g,name,v])=>`<tr><td>${esc(g.label)}</td><td style="text-align:left">${esc(name)}</td><td>${nf(v,1)}</td></tr>`).join('')}</table>`;
+}
+
+function paintApps(){
+ const list=(id,rows,fmt,scale)=>{$(id).innerHTML=rows?.length?rows.map(([name,v])=>`<div class="row"><span class="name" title="${esc(name)}">${esc(name)}</span><span class="val">${fmt(v)}</span><div class="bar"><span style="width:${Math.max(1,v/scale*100)}%"></span></div></div>`).join(''):'<div class="note">Sin datos ahora mismo</div>'};
+ const a=D.apps||{};
+ list('appsCpu',a.cpu,v=>nf(v,v<10?1:0)+' %',Math.max(100,a.cpu?.[0]?.[1]||0));
+ list('appsMem',a.mem,v=>v>=1024?nf(v/1024,1)+' GB':nf(v)+' MB',a.mem?.[0]?.[1]||1);
+}
+
+function paintFacts(){
+ const n=D.now,S=D.detail?.sensors,ssd=D.ssd,f=S?.fan;
+ const items=[
+  ['Ventilador',f?.rpm!=null?`${nf(f.rpm)} RPM`:'—',f?.max?`Mínimo ${nf(f.min)} · máximo ${nf(f.max)} RPM`:''],
+  ['Carga 1 / 5 / 15 min',n.load?[n.load.load1,n.load.load5,n.load.load15].map(v=>nf(v,1)).join(' / '):'—',D.machine.cores?`${D.machine.cores} núcleos en total`:''],
+  ['Swap',n.swap?`${nf(n.swap.used/1024,1)} GB`:'—',D.swapUsage?`de ${nf(parseFloat(D.swapUsage.match(/total = ([\d.]+)M/)?.[1])/1024,1)} GB reservados ahora`:''],
+  ['SSD: escrito en total',ssd?bytes(ssd.written):'—',ssd?`Leído ${bytes(ssd.read)} · ${nf(ssd.hours)} h encendido`:''],
+  ['SSD: ritmo de escritura',ssd&&ssd.hours?`${nf(ssd.written/ssd.hours/1e9,0)} GB por hora`:'—','Media de toda su vida encendido'],
+  ['SSD: salud',ssd?`${nf(ssd.used)} % de desgaste SMART`:'—',ssd?`Reserva ${nf(ssd.spare)} % · ${nf(ssd.errors)} errores${ssd.partial?' · registros parciales':''}`:''],
+ ];
+ $('facts').innerHTML=items.map(([k,v,s])=>`<div>${esc(k)}<b>${esc(v)}</b>${esc(s)}</div>`).join('');
+}
+
+function paintVerdict(){
+ const L=D.local,S=D.detail?.sensors,p=D.pressure,sp=D.space,ssd=D.ssd,cpu=D.now.cpu?D.now.cpu.user+D.now.cpu.nice+D.now.cpu.system:null;
+ let level='',title='Sin alertas actuales';const facts=[];
+ if(!L||!S||!D.detail?.macmon||!D.now.cpu||!D.now.gpu||!sp||p==null){level='warn';title='Lecturas parciales';facts.push('Alguna fuente no está disponible; sus valores se muestran como “—”.')}
+ if(p>=4){level='crit';title='Memoria al límite'}else if(p>=2&&level!=='crit'){level='warn';title='La memoria va justa'}
+ if(S?.thermal===3){level='crit';title='Estado térmico crítico'}else if((S?.thermal===2||S?.thermal===1)&&!level){level='warn';title=THERMAL[S.thermal]}
+ if(ssd&&(ssd.warning||ssd.passed===false)){level='crit';title='El SSD avisa de un problema'}
+ if(sp&&sp.free/sp.total<.05){level='crit';title='Disco casi lleno'}else if(sp&&sp.free/sp.total<.1&&!level){level='warn';title='Queda poco espacio'}
+ if(p>=2)facts.push('macOS está comprimiendo memoria y usando el SSD como apoyo');else if(p===1)facts.push('Sin presión de memoria');
+ if(L?.pa!=null)facts.push(`CPU a ${nf(L.pa)} °C`);
+ const swap=D.now.swap?D.now.swap.used/1024:null;if(swap>1)facts.push(`${nf(swap,1)} GB en swap`);
+ if(cpu!=null)facts.push(`CPU al ${nf(cpu)} %`);
+ const top=D.apps?.cpu?.[0];if(top&&top[1]>25)facts.push(`lo que más CPU usa: ${top[0]} (${nf(top[1])} %)`);
+ $('verdict').className='card verdict '+level;$('verdictIcon').textContent=level?'!':'✓';$('verdictTitle').textContent=title;$('verdictText').textContent=facts.join(' · ');
+ document.title=(level?'⚠︎ ':'')+'Mac mini';
+}
+
+async function update(){
+ if(busy)return;busy=true;
+ try{
+  const res=await fetch(`/mini/api/snapshot?range=${range}`,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+  if(!res.ok)throw Error(res.status);
+  const data=await res.json();if(data.range!==range)return;if(!data.now||!data.series||!data.machine||Date.now()/1000-data.at>30)throw Error('Lecturas antiguas o incompletas');D=data;
+  lastOk=Date.now();$('live').className='live';$('liveText').textContent='En directo · '+clock(D.at,true);
+  document.querySelectorAll('.card,.charts').forEach(el=>el.style.opacity='');
+  for(const f of [paintTiles,paintCores,paintSensors,paintApps,paintFacts,paintVerdict,drawAll]){try{f()}catch(e){console.error(f.name,e)}}
+ }catch(e){
+  $('live').className='live stale';$('liveText').textContent=lastOk?'Sin conexión · último dato '+new Date(lastOk).toLocaleTimeString('es-ES'):'Sin conexión';
+  document.querySelectorAll('.card').forEach(el=>el.style.opacity=.5);
+ }finally{busy=false}
+}
+function setRange(r){range=r;try{localStorage.setItem('range',r)}catch{};document.querySelectorAll('.range button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.range===r));$('charts').style.opacity=.55;setCursor(null);busy=false;update()}
+document.querySelectorAll('.range button').forEach(b=>{b.setAttribute('aria-pressed',+b.dataset.range===range);b.onclick=()=>setRange(+b.dataset.range)});
+buildCharts();
+setInterval(()=>{if(!document.hidden)update()},5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
+update();
+</script>
+</html>

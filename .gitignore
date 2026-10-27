@@ -1,8 +1,25 @@
-node_modules/
-dist/
+# Local settings, credentials and exports; never part of the public setup.
 .DS_Store
+._*
 .env
 .env.*
+!.env.example
+.claude/
+.codex/
+.ssh/
+.gitconfig.local
+*.pem
+*.key
 *.log
-coverage/
-CLAUDE.local.md
+*.backup
+*.bak
+bookmarks_*.html
+__pycache__/
+
+# Runtime monitoring data and compiled helper.
+monitoring/panel/*.jsonl
+monitoring/panel/mac-sensors
+
+# Artifacts from earlier versions of the repository.
+node_modules/
+dist/

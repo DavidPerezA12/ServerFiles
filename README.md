@@ -1,140 +1,63 @@
 # Serverfiles
 
-**Dotfiles for your home server.**
+Configuración de un Mac como máquina de desarrollo remoto siempre encendida. La máquina de referencia es un Mac mini: compila, ejecuta terminales y edita código en remoto, y se accede a ella desde un MacBook o un iPad.
 
-Serverfiles is an open-source, macOS-first configuration toolkit that turns your Mac mini into a reproducible home server for development, monitoring, backups and private services.
+No hay instalador. Los ficheros de aquí son plantillas y guías que se adaptan a cada Mac durante la instalación (usuario, hostname, rutas y puertos se detectan en la máquina, no están escritos en el repo).
 
-## Idea
+## Qué incluye
 
-Serverfiles treats a home server like dotfiles: versioned, repeatable, modular and easy to rebuild. The MVP focuses on macOS, Colima, Docker Compose and launchd, with no web dashboard yet.
+- **Acceso remoto al mini.** SSH (Remote Login de macOS), T3 Code con T3 Connect, Tailscale, Jump Desktop Connect y VS Code Remote Tunnels. El mini es el que recibe las conexiones; los clientes solo necesitan sus apps correspondientes.
+- **Panel de monitorización propio.** Una página web privada (solo accesible dentro de la red Tailscale) con CPU y actividad por núcleo, GPU, memoria, temperaturas, ventilador, consumo, red y salud del SSD. Se monta sobre Netdata más lecturas propias de macOS (ver [docs/MONITORING.md](docs/MONITORING.md)).
 
-## Requirements
+  ![Panel con datos simulados, sin información de un equipo real](docs/img/panel.png)
 
-- macOS on Apple Silicon or Intel
-- Node.js 20+
-- pnpm
-- Homebrew
-- Colima
-- Docker CLI with Docker Compose
+  La imagen es una demostración con datos simulados, no una captura de la
+  actividad, el almacenamiento o la red del servidor real.
 
-Recommended setup:
+- **Ajustes para que el mini sobreviva solo.** Inicio de sesión automático, energía (sin suspensión, rearranque tras corte de luz), qué apps se abren al iniciar sesión y qué servicios arrancan solos (ver [docs/MINI.md](docs/MINI.md)).
+- **Guía de cliente para iPad.** Qué apps instalar y cómo conectarse al mini por SSH, T3 Code, VS Code Remote y escritorio remoto (ver [docs/IPAD.md](docs/IPAD.md)). Un Mac como cliente se configura desde dotfiles.
 
-```sh
-brew install colima docker docker-compose
-colima start
-```
+## Relación con dotfiles
 
-## Installation
+Las herramientas compartidas (shell, Git, Neovim, CLI, apps de uso general) viven en [dotfiles](https://github.com/DavidPerezA12/dotfiles), no aquí. Este repo solo contiene lo que es específico del mini como servidor: el acceso remoto hacia él, la monitorización y sus ajustes. El `Brewfile` de aquí instala únicamente eso (Jump Desktop Connect, Netdata, macmon, smartmontools, Python); las herramientas compartidas se seleccionan de dotfiles según el uso del servidor, sin instalar sus listas completas automáticamente.
 
-```sh
-pnpm install
-pnpm build
-pnpm link --global
-```
+Antes de instalar herramientas de desarrollo, el agente pregunta qué se necesita: Android, iOS/macOS, web/backend, bases de datos, contenedores y agentes de código ([docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)). Los emuladores, las imágenes del SDK, Xcode completo y los servicios locales se eligen por separado. **Wispr Flow se queda en el MacBook; no se instala en el Mac mini.**
 
-You can also run locally without linking:
+## Estructura del repo
 
-```sh
-pnpm dev -- doctor
-```
+| Ruta | Qué es |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Instrucciones para el agente que aplica la configuración, bloque por bloque |
+| [Brewfile](Brewfile) | Solo lo que el mini necesita además de dotfiles (`brew bundle --file Brewfile`) |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Qué herramientas de desarrollo elegir con el usuario y cómo verificarlas |
+| [docs/CONNECTIONS.md](docs/CONNECTIONS.md) | Obtener y entregar enlaces reales, distinguir hosts y comprobar cada acceso |
+| [docs/MINI.md](docs/MINI.md) | Ajustes del mini: macOS, login items, apps y qué arranca solo |
+| [docs/MONITORING.md](docs/MONITORING.md) | Monitorización: instalación, comprobación, límites y desinstalación |
+| [docs/IPAD.md](docs/IPAD.md) | Configuración del iPad como cliente del mini |
+| [monitoring/netdata.conf](monitoring/netdata.conf) | Config de Netdata: solo loopback, sin nube (plantilla con `__USER__`) |
+| [monitoring/panel/](monitoring/panel/) | El panel `Stats`: `server.py` (une Netdata, macmon, smartctl y macOS), `index.html` (la página), `mac-sensors.m` (temperaturas, ventilador y estado térmico) y la plantilla del LaunchAgent |
+| [scripts/verify.sh](scripts/verify.sh) | Comprobaciones de solo lectura: ajustes y servicios, sin cambiar nada |
 
-## Development
+## Cómo se usa
 
-```sh
-pnpm build
-pnpm test
-```
+1. Lee el [AGENTS.md](AGENTS.md) y los docs.
+2. Inspecciona el Mac que se va a configurar (modelo, macOS, arquitectura, qué ya tiene instalado) antes de cambiar nada.
+3. Pregunta qué desarrollo se hará en el servidor siguiendo [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). Aplica la configuración por bloques, eligiendo en cada uno qué instalar u omitir: terminal/Git/editor desde dotfiles, runtimes y agentes, apps, acceso remoto, monitorización, ajustes del mini y clientes.
+4. Después de cada bloque, pasa el [script de verificación](scripts/verify.sh) y comprueba la conexión real (SSH, entorno T3, escritorio Jump, bookmark `Stats`).
 
-CI runs build and tests on macOS, matching the project runtime assumptions.
+Los inicios de sesión, emparejamientos, permisos y credenciales son siempre manuales y quedan fuera del repo.
 
-## Commands
-
-```sh
-serverfiles doctor
-serverfiles init
-serverfiles github-runner owner/repo
-serverfiles github-runner my-org --scope org
-serverfiles add dev
-serverfiles add files
-serverfiles add photos
-serverfiles start
-serverfiles stop
-serverfiles restart
-serverfiles status
-serverfiles logs
-serverfiles logs --follow
-serverfiles logs --tail 200
-serverfiles enable-autostart
-serverfiles disable-autostart
-```
-
-## Quick Example
+Para comprobar el código del verificador sin tocar el equipo:
 
 ```sh
-serverfiles doctor
-serverfiles init
-serverfiles add dev
-serverfiles start
-serverfiles status
+shellcheck scripts/verify.sh
+python3 tests/test_verify.py
 ```
 
-This creates `~/.serverfiles`, adds the development stack and starts the services with Docker Compose.
+Las pruebas simulan Tailscale parado, lecturas fallidas y perfiles de servidor
+o cliente. Para comprobar un cliente real se usa `scripts/verify.sh --role client`;
+el perfil predeterminado de `scripts/verify.sh` es el servidor.
 
-To prepare the Mac mini as a GitHub Actions self-hosted runner for a repository:
+## Estado
 
-```sh
-serverfiles github-runner owner/repo
-```
-
-The command creates setup notes under `~/.serverfiles/github-runners` and tells
-you which GitHub settings page to open. GitHub's generated token is intentionally
-not stored in this repository.
-
-## Configuration
-
-Serverfiles stores runtime state in `~/.serverfiles`:
-
-- `config.yml`: server name, enabled stacks and port choices
-- `docker-compose.yml`: generated Compose file for the enabled stacks
-- `github-runners/`: local setup notes for GitHub Actions self-hosted runners
-- `data/`: persistent service data
-- `logs/`: service and launchd logs
-- `launchd/`: generated launchd files
-- `backups/`: reserved for backup profiles
-
-Edit `~/.serverfiles/config.yml` before running `serverfiles add dev` if you need different host ports. Serverfiles validates ports and prevents duplicate assignments.
-
-After changing ports for an enabled stack, run its `serverfiles add <stack>` command
-again to regenerate the known service ports in `docker-compose.yml`.
-
-## Available Stacks
-
-- `dev`: PostgreSQL, Redis, MongoDB, Adminer and Uptime Kuma.
-- `files`: File Browser for a simple private web file manager.
-- `photos`: Immich for self-hosted photo and video backup.
-
-Stack service ports are bound to `127.0.0.1` by default. The base compose file also includes Caddy as the public reverse proxy foundation.
-
-Serverfiles is MIT-licensed orchestration code. Optional stacks use upstream Docker images and keep their own licenses; Serverfiles does not vendor those applications.
-
-## Documentation
-
-- [Getting started](docs/getting-started.md)
-- [Stacks and ports](docs/stacks.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Architecture](docs/architecture.md)
-- [GitHub Actions on a Mac mini](docs/ci-mac-mini-runner.md)
-- [Contributing](CONTRIBUTING.md)
-
-## Roadmap
-
-- Caddy site templates
-- restic backup profiles
-- config-driven credentials
-- health checks
-- import/export for server profiles
-- optional web dashboard
-
-## License
-
-MIT
+Proyecto en uso y en evolución, sin releases. La guía de iPad ([docs/IPAD.md](docs/IPAD.md)) describe la configuración prevista pero aún no está verificada en el iPad.

@@ -1,0 +1,4 @@
+samples.jsonl
+*.log
+mac-sensors
+__pycache__/
