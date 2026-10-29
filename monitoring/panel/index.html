@@ -3,11 +3,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Mac mini</title>
+<title>Mac</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="Mac mini">
+<meta name="apple-mobile-web-app-title" content="Mac">
 <style>
 :root{
  --page:#0d0d0d;--surface:#1a1a19;--raised:#242422;--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;
@@ -89,6 +89,8 @@ h2{font-size:15px;font-weight:620;margin:0;letter-spacing:-.1px}
 .key{display:inline-block;width:12px;height:2px;border-radius:1px;align-self:center}
 .plot{position:relative;height:170px;margin-top:4px;outline:none;touch-action:pan-y}
 .plot:focus-visible,.heat:focus-visible{box-shadow:0 0 0 2px var(--s1);border-radius:6px}
+.chart.wide{grid-column:1/-1}
+[hidden]{display:none!important}
 .history-note{font-size:11px;color:var(--muted);margin-top:3px;min-height:16px}
 .tip{position:absolute;top:4px;pointer-events:none;background:#2a2a28;border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:12px;color:var(--ink);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.45);display:none;z-index:3}
 .tip div{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
@@ -127,17 +129,18 @@ footer{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-
 a{color:#6da7ec;text-decoration:none}a:hover{text-decoration:underline}
 
 @media(max-width:1500px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:1250px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.cpu,.bottom{grid-template-columns:1fr}}
+@media(max-width:1250px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:repeat(2,minmax(0,1fr))}.chart.wide{grid-column:auto}.cpu,.bottom{grid-template-columns:1fr}}
 @media(max-width:760px){main{padding:14px 12px 28px}.charts,.apps{grid-template-columns:1fr}.tiles,.facts{grid-template-columns:repeat(2,minmax(0,1fr))}.clusters{grid-template-columns:1fr}.srow{grid-template-columns:120px minmax(0,1fr) 84px;gap:8px}.big{font-size:30px}h1{font-size:21px}.verdict b{display:block}}
 @media(max-width:440px){.tiles{grid-template-columns:1fr}.section-head{flex-direction:column;align-items:flex-start}.range{width:100%}.range button{flex:1}}
 </style>
 <main>
 <header>
- <div><h1 id="name">Mac mini</h1><div class="sub" id="machine">Conectando…</div></div>
+ <div><h1 id="name">Mac</h1><div class="sub" id="machine">Conectando…</div></div>
  <div class="live" id="live" role="status"><span class="pulse"></span><span id="liveText">Conectando…</span></div>
 </header>
 
 <section class="card verdict" id="verdict" aria-live="polite"><div class="icon" id="verdictIcon">·</div><div><b id="verdictTitle">Cargando…</b><span id="verdictText">Leyendo los sensores del Mac.</span></div></section>
+<p class="note" id="recording" role="status">Comprobando el registro de muestras…</p>
 
 <section class="tiles" aria-label="Ahora mismo">
  <article class="card tile"><div class="tile-head">CPU <span class="status" id="cpuStatus"></span></div><div class="big" id="cpuNow">—</div><div class="meter" id="cpuMeter"><span style="width:0"></span></div><div class="lines" id="cpuNote"></div></article>
@@ -147,9 +150,10 @@ a{color:#6da7ec;text-decoration:none}a:hover{text-decoration:underline}
   <div class="keys"><span><i style="background:var(--s1)"></i>Apps</span><span><i style="background:var(--s2)"></i>Sistema</span><span><i style="background:var(--s3)"></i>Comprimida</span><span><i style="background:var(--axis)"></i>Caché y libre</span></div></article>
  <article class="card tile"><div class="tile-head">Almacenamiento <span class="status" id="diskStatus"></span></div><div class="big" id="diskNow">—</div><div class="meter" id="diskMeter"><span style="width:0"></span></div><div class="lines" id="diskNote"></div></article>
  <article class="card tile"><div class="tile-head">Temperatura CPU <span class="status" id="tempStatus"></span></div><div class="big" id="tempNow">—</div><div class="meter" id="tempMeter"><span style="width:0"></span></div><div class="lines" id="tempNote"></div></article>
- <article class="card tile"><div class="tile-head">Temperatura GPU <span class="status" id="gpuTempStatus"></span></div><div class="big" id="gpuTempNow">—</div><div class="meter" id="gpuTempMeter"><span style="width:0"></span></div><div class="lines" id="gpuTempNote"></div></article>
+ <article class="card tile" id="gpuTempTile"><div class="tile-head">Temperatura GPU <span class="status" id="gpuTempStatus"></span></div><div class="big" id="gpuTempNow">—</div><div class="meter" id="gpuTempMeter"><span style="width:0"></span></div><div class="lines" id="gpuTempNote"></div></article>
  <article class="card tile"><div class="tile-head">Ventilador <span class="status" id="fanStatus"></span></div><div class="big" id="fanNow">—</div><div class="meter" id="fanMeter"><span style="width:0"></span></div><div class="lines" id="fanNote"></div></article>
- <article class="card tile"><div class="tile-head">Consumo <span class="status" id="powerStatus"></span></div><div class="big" id="powerNow">—</div><div class="meter" id="powerMeter"><span style="width:0"></span></div><div class="lines" id="powerNote"></div></article>
+ <article class="card tile"><div class="tile-head">Consumo eléctrico <span class="status" id="powerStatus"></span></div><div class="big" id="powerNow">—</div><div class="meter" id="powerMeter"><span style="width:0"></span></div><div class="lines" id="powerNote"></div></article>
+ <article class="card tile" id="batteryTile" hidden><div class="tile-head">Batería <span class="status" id="batStatus"></span></div><div class="big" id="batNow">—</div><div class="meter" id="batMeter"><span style="width:0"></span></div><div class="lines" id="batNote"></div></article>
 </section>
 
 <section class="card cpu" aria-label="Núcleos">
@@ -169,7 +173,7 @@ a{color:#6da7ec;text-decoration:none}a:hover{text-decoration:underline}
 <section class="charts" id="charts"></section>
 
 <section class="bottom">
- <article class="card sensors"><div class="panel-title"><h2>Sensores de temperatura</h2><span class="note" id="sensorCount"></span></div><div id="sensorRows"></div><p class="note">Media y máximo de los sensores HID de cada zona. Los nombres originales están en la tabla; no se asigna un sensor a un núcleo sin conocer esa correspondencia.</p>
+ <article class="card sensors"><div class="panel-title"><h2>Sensores de temperatura</h2><span class="note" id="sensorCount"></span></div><div id="sensorRows"></div><p class="note" id="sensorNote">Media y máximo de los sensores HID de cada zona. Los nombres originales están en la tabla; no se asigna un sensor a un núcleo sin conocer esa correspondencia.</p>
   <details><summary>Ver todos los sensores</summary><div id="sensorTable"></div></details></article>
  <article class="card apps">
   <div><h3>Qué usa la CPU</h3><div class="note">Media de 30 s · 100 % = un núcleo</div><div id="appsCpu"></div></div>
@@ -203,14 +207,20 @@ const CHARTS=[
  {id:'use',title:'Uso de CPU y GPU',unit:'%',series:[['cpu.cpu','CPU'],['gpu.gpu','GPU']],dom:()=>[0,100],fmt:v=>nf(v,0)},
  {id:'freq',title:'Frecuencias',unit:'MHz',series:[['local.pf','Rendimiento'],['local.ef','Eficiencia'],['local.gf','GPU']],dom:m=>[0,Math.max(1000,m)],fmt:v=>nf(v,0)},
  {id:'temp',title:'Temperaturas',unit:'°C',note:'Media de cada zona',series:[['local.pa','Rendimiento'],['local.ea','Eficiencia'],['local.g','GPU'],['local.ssd','SSD']],dom:m=>[20,Math.max(100,m)],fmt:v=>nf(v,0)},
- {id:'power',title:'Consumo informado',unit:'W',note:'Estimación del SMC y contadores del chip',series:[['local.sw','Sistema (SMC)'],['local.cw','CPU'],['local.gw','GPU']],dom:m=>[0,Math.max(5,m)],fmt:auto},
+ {id:'power',title:'Consumo estimado',unit:'W',note:'macOS / macmon · no es un medidor de enchufe',series:[['local.sw','Sistema (SMC)'],['local.cw','CPU'],['local.gw','GPU']],dom:m=>[0,Math.max(5,m)],fmt:auto},
  {id:'mem',title:'Memoria',unit:'GB',series:[['local.ram','RAM en uso'],['swap.swap','Swap']],dom:m=>[0,Math.max(D.machine.ramGiB||0,m)],fmt:v=>nf(v,1)},
  {id:'fan',title:'Ventilador',unit:'RPM',series:[['fan.fan','Ventilador']],dom:m=>[0,Math.max(fanMax()||0,m,1000)],fmt:v=>nf(v,0)},
  {id:'net',title:'Red',unit:'Mbit/s',series:[['net.down','Descarga'],['net.up','Subida']],dom:m=>[0,Math.max(1,m)],fmt:auto},
  {id:'disk',title:'Disco',unit:'MB/s',note:'SSD interno',series:[['disk.read','Lectura'],['disk.write','Escritura']],dom:m=>[0,Math.max(1,m)],fmt:auto},
  {id:'swapio',title:'Swap ↔ SSD',unit:'MB/s',note:'Memoria que macOS mueve al disco',series:[['swapio.out','Hacia el SSD'],['swapio.in','Desde el SSD']],dom:m=>[0,Math.max(1,m)],fmt:auto},
+ {id:'battery',title:'Carga de la batería',unit:'%',wide:true,only:()=>D.machine.battery,series:[['local.bp','Carga']],dom:()=>[0,100],fmt:v=>nf(v,0)},
 ];
-const fanMax=()=>D?.detail?.sensors?.fan?.max;
+const shown=c=>!c.only||c.only();
+const fanMax=()=>Math.max(0,...(D?.detail?.sensors?.fans||[]).map(f=>f.max||0),D?.detail?.sensors?.fan?.max||0);
+// Periods the Mac slept: no samples exist there, and that is expected, not a fault.
+const sleepsIn=t0=>(D.sleeps||[]).map(([a,b])=>[Math.max(a,t0),Math.min(b,D.at)]).filter(([a,b])=>b>a);
+const asleepAt=t=>(D.sleeps||[]).some(([a,b])=>t>=a&&t<=b);
+function sleepBands(g,X,t0){let s='';for(const [a,b] of sleepsIn(t0)){const x=X(a),w=X(b)-x;s+=`<rect x="${x.toFixed(1)}" y="${g.T}" width="${Math.max(1,w).toFixed(1)}" height="${g.h}" fill="#fff" fill-opacity=".045"/>`;if(w>64)s+=`<text x="${x+w/2}" y="${g.T+13}" text-anchor="middle">En reposo</text>`}return s}
 const pts=key=>{const [a,b]=key.split('.');return D.series?.[a]?.[b]||[]};
 const near=(points,t,tol)=>{let best=null,d=Infinity;for(const p of points){if(p[1]==null)continue;const x=Math.abs(p[0]-t);if(x<d){d=x;best=p}}return best&&d<=tol?best:null};
 const lastPoint=points=>{for(let i=points.length-1;i>=0;i--)if(points[i][1]!=null)return points[i];return null};
@@ -225,7 +235,7 @@ const xStep=()=>range<=300?60:range<=3600?900:range<=21600?3600:14400;
 
 // ---------- line charts ----------
 function buildCharts(){
- $('charts').innerHTML=CHARTS.map(c=>`<article class="card chart"><div class="chart-title"><b>${c.title}</b><span>${c.note?esc(c.note)+' · ':''}${esc(c.unit)}</span></div><div class="readout" id="ro-${c.id}"></div><div class="plot" id="pl-${c.id}" tabindex="0" role="img" aria-label="${esc(c.title)} en el periodo elegido. Flechas para recorrer."><svg><g class="static"></g><g class="cur"></g></svg><div class="tip"></div></div><div class="history-note" id="hn-${c.id}"></div><details><summary>Ver como tabla</summary><div id="tb-${c.id}"></div></details></article>`).join('');
+ $('charts').innerHTML=CHARTS.map(c=>`<article class="card chart${c.wide?' wide':''}" id="ch-${c.id}"${c.only?' hidden':''}><div class="chart-title"><b id="ct-${c.id}">${c.title}</b><span id="cn-${c.id}">${c.note?esc(c.note)+' · ':''}${esc(c.unit)}</span></div><div class="readout" id="ro-${c.id}"></div><div class="plot" id="pl-${c.id}" tabindex="0" role="img" aria-label="${esc(c.title)} en el periodo elegido. Flechas para recorrer."><svg><g class="static"></g><g class="cur"></g></svg><div class="tip"></div></div><div class="history-note" id="hn-${c.id}"></div><details><summary>Ver como tabla</summary><div id="tb-${c.id}"></div></details></article>`).join('');
  for(const c of CHARTS)wire($('pl-'+c.id),c.id);
  wire($('heat'),'heat');
  new ResizeObserver(()=>D&&drawAll()).observe(document.querySelector('main'));
@@ -246,13 +256,14 @@ function drawChart(c){
  c.data=c.series.map(([k])=>pts(k).filter(p=>p[0]>=t0-1));
  const vals=c.data.flat().map(p=>p[1]).filter(ok);
  const available=c.data.flat().filter(p=>ok(p[1])).map(p=>p[0]);
- $('hn-'+c.id).textContent=available.length?`Datos desde ${clock(Math.min(...available))} · última muestra ${clock(Math.max(...available),true)}`:'Sin muestras en este periodo';
+ const rest=sleepsIn(t0).reduce((a,[x,y])=>a+y-x,0);
+ $('hn-'+c.id).textContent=(available.length?`Datos desde ${clock(Math.min(...available))} · última muestra ${clock(Math.max(...available),true)}`:'Sin muestras en este periodo')+(rest>60?` · en reposo ${duration(rest)}`:'');
  const [lo,hiRaw]=c.dom(vals.length?Math.max(...vals):0),ticks=niceTicks(lo,hiRaw),hi=ticks.at(-1);
  const X=t=>g.L+(t-t0)/range*g.w,Y=v=>g.T+g.h-(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*g.h;
  Object.assign(c,{g,X,Y,lo});
  let s='';
  for(const v of ticks)s+=`<line x1="${g.L}" x2="${g.L+g.w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===lo?AXIS:GRID}" shape-rendering="crispEdges"/><text x="${g.L-7}" y="${Y(v)+4}" text-anchor="end">${compact(v)}</text>`;
- s+=xAxis(g,X,t0);
+ s+=xAxis(g,X,t0)+sleepBands(g,X,t0);
  c.data.forEach((points,i)=>{
   const segs=[];let seg=null;
   for(const p of points){if(p[1]==null){seg=null;continue}if(!seg)segs.push(seg=[]);seg.push([X(p[0]).toFixed(1),Y(p[1]).toFixed(1)])}
@@ -263,7 +274,7 @@ function drawChart(c){
  });
  pl.querySelector('.static').innerHTML=s;
  // Table twin
- $('tb-'+c.id).innerHTML=`<table><tr><th>Serie</th><th>Ahora</th><th>Mín.</th><th>Media</th><th>Máx.</th></tr>${c.data.map((points,i)=>{const v=points.map(p=>p[1]).filter(ok),l=lastPoint(points);return `<tr><td>${esc(c.series[i][1])}</td>${v.length?[l[1],Math.min(...v),v.reduce((a,b)=>a+b,0)/v.length,Math.max(...v)].map(x=>`<td>${c.fmt(x)} ${esc(c.unit)}</td>`).join(''):'<td colspan="4">Sin datos en este periodo</td>'}</tr>`}).join('')}</table>`;
+ $('tb-'+c.id).innerHTML=`<table><tr><th>Serie</th><th>Última muestra</th><th>Mín.</th><th>Media</th><th>Máx.</th></tr>${c.data.map((points,i)=>{const v=points.map(p=>p[1]).filter(ok),l=lastPoint(points);return `<tr><td>${esc(c.series[i][1])}</td>${v.length?[l[1],Math.min(...v),v.reduce((a,b)=>a+b,0)/v.length,Math.max(...v)].map(x=>`<td>${c.fmt(x)} ${esc(c.unit)}</td>`).join(''):'<td colspan="4">Sin datos en este periodo</td>'}</tr>`}).join('')}</table>`;
  drawChartCursor(c);
 }
 function drawChartCursor(c){
@@ -273,7 +284,10 @@ function drawChartCursor(c){
  if(cursor!=null){const x=X(cursor);s+=`<line x1="${x}" x2="${x}" y1="${g.T}" y2="${g.T+g.h}" stroke="#6b6a65"/>`;
   for(const [p,i] of hits)s+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4" fill="${COLORS[i]}" stroke="${SURFACE}" stroke-width="2"/>`;}
  pl.querySelector('.cur').innerHTML=s;
- if(cursor!=null&&cursorOwner===c.id&&hits.length){
+ if(cursor!=null&&cursorOwner===c.id&&asleepAt(cursor)){
+  tip.innerHTML=`<div class="when">${clock(cursor,range<=3600)}</div><div>Mac en reposo · sin muestras</div>`;
+  tip.style.display='block';const x=X(cursor),tw=tip.offsetWidth;tip.style.left=(x+12+tw>g.W?x-12-tw:x+12)+'px';
+ }else if(cursor!=null&&cursorOwner===c.id&&hits.length){
   tip.innerHTML=`<div class="when">${clock(hits[0][0][0],range<=3600)}</div>`+hits.map(([p,i])=>`<div><span class="key" style="background:${COLORS[i]}"></span><b>${c.fmt(p[1])} ${esc(c.unit)}</b>&nbsp;${esc(c.series[i][1])}</div>`).join('');
   tip.style.display='block';const x=X(cursor),tw=tip.offsetWidth;tip.style.left=(x+12+tw>g.W?x-12-tw:x+12)+'px';
  }else tip.style.display='none';
@@ -300,10 +314,10 @@ function drawHeat(){
  for(const p of points){if(p[1]==null)continue;const x=Math.max(g.L,X(p[0])-bw/2),w=Math.max(0,Math.min(bw+.6,g.L+g.w-x));s+=`<rect x="${x.toFixed(1)}" y="${(g.T+r*rh+1).toFixed(1)}" width="${w.toFixed(1)}" height="${(rh-2).toFixed(1)}" fill="${heatColor(p[1])}"/>`}
  });
  if(cores.length)s+=`<line x1="${g.L}" x2="${g.L+g.w}" y1="${g.T+(D.machine.pCores||0)*rh}" y2="${g.T+(D.machine.pCores||0)*rh}" stroke="${SURFACE}" stroke-width="3"/>`;
- s+=xAxis(g,X,t0);
+ s+=xAxis(g,X,t0)+sleepBands(g,X,t0);
  if(!heat.data.some(p=>p.some(q=>q[1]!=null)))s+=`<text x="${g.L+g.w/2}" y="${g.T+g.h/2}" text-anchor="middle">Sin datos de núcleos en este periodo</text>`;
  el.querySelector('.static').innerHTML=s;
- $('heatTable').innerHTML=`<table><tr><th>Núcleo</th><th>Ahora</th><th>Media</th><th>Máx.</th></tr>${cores.map((c,r)=>{const v=heat.data[r].map(p=>p[1]).filter(ok),l=lastPoint(heat.data[r]);return `<tr><td>${c.name}</td>${v.length?`<td>${nf(l[1],0)} %</td><td>${nf(v.reduce((a,b)=>a+b,0)/v.length,0)} %</td><td>${nf(Math.max(...v),0)} %</td>`:'<td colspan="3">Sin datos</td>'}</tr>`}).join('')}</table>`;
+ $('heatTable').innerHTML=`<table><tr><th>Núcleo</th><th>Última muestra</th><th>Media</th><th>Máx.</th></tr>${cores.map((c,r)=>{const v=heat.data[r].map(p=>p[1]).filter(ok),l=lastPoint(heat.data[r]);return `<tr><td>${c.name}</td>${v.length?`<td>${nf(l[1],0)} %</td><td>${nf(v.reduce((a,b)=>a+b,0)/v.length,0)} %</td><td>${nf(Math.max(...v),0)} %</td>`:'<td colspan="3">Sin datos</td>'}</tr>`}).join('')}</table>`;
  drawHeatCursor();
 }
 function drawHeatCursor(){
@@ -319,8 +333,8 @@ function drawHeatCursor(){
  tip.style.display='none';
 }
 
-function setCursor(t,owner){cursor=t;cursorOwner=t==null?null:owner;if(!D)return;for(const c of CHARTS)if(c.g)drawChartCursor(c);if(heat.g)drawHeatCursor()}
-function drawAll(){for(const c of CHARTS)drawChart(c);drawHeat()}
+function setCursor(t,owner){cursor=t;cursorOwner=t==null?null:owner;if(!D)return;for(const c of CHARTS)if(c.g&&shown(c))drawChartCursor(c);if(heat.g)drawHeatCursor()}
+function drawAll(){for(const c of CHARTS){const on=shown(c);$('ch-'+c.id).hidden=!on;if(on)drawChart(c);else c.g=null}drawHeat()}
 
 // ---------- tiles & panels ----------
 function status(id,level,text){const el=$(id);el.className='status '+(level||'');el.innerHTML=`<i aria-hidden="true">${level==='none'?'–':level?'!':'✓'}</i>${esc(text)}`}
@@ -332,7 +346,7 @@ function paintTiles(){
  $('name').textContent=(m.name||'Mac').replace(/^.*?[’']s\s+/,'');
  $('machine').textContent=[m.chip,m.pCores&&m.eCores?`${m.pCores} núcleos de rendimiento + ${m.eCores} de eficiencia`:m.cores&&`${m.cores} núcleos`,m.gpuCores&&`GPU de ${m.gpuCores} núcleos`,m.ramGiB&&`${nf(m.ramGiB)} GB`,m.macos&&`macOS ${m.macos}`,n.uptime&&`encendido hace ${duration(n.uptime.uptime)}`].filter(Boolean).join(' · ');
  // CPU
- const cpu=n.cpu?n.cpu.user+n.cpu.nice+n.cpu.system:null;
+ const cpu=n.cpu&&[n.cpu.user,n.cpu.nice,n.cpu.system].every(ok)?n.cpu.user+n.cpu.nice+n.cpu.system:null;
  big('cpuNow',cpu,'%');meter('cpuMeter',cpu,cpu>85?'warn':'');status('cpuStatus',cpu==null?'none':cpu>85?'warn':'',cpu==null?'Sin lectura':cpu>85?'Muy ocupada':'Normal');
  $('cpuNote').innerHTML=L?.pf!=null?`Rendimiento <b>${nf(L.pf)} MHz</b> · Eficiencia <b>${nf(L.ef)} MHz</b>`:'Frecuencias: sin lectura';
  // GPU
@@ -340,35 +354,59 @@ function paintTiles(){
  big('gpuNow',gpu,'%');meter('gpuMeter',gpu,gpu>90?'warn':'');status('gpuStatus',gpu==null?'none':'',gpu==null?'Sin lectura':'Normal');
  $('gpuNote').innerHTML=[L?.gf!=null&&`<b>${nf(L.gf)} MHz</b>`,L?.gw!=null&&`<b>${auto(L.gw)} W</b>`,L?.g!=null&&`<b>${nf(L.g)} °C</b>`].filter(Boolean).join(' · ')||'Sin datos de macmon';
  // Memory
- if(L?.ram!=null&&m.ramGiB){big('memNow',L.ram,`de ${nf(m.ramGiB)} GB`,1);[...$('memMeter').children].forEach((el,i)=>el.style.width=[L.apps,L.wired,L.comp][i]/m.ramGiB*100+'%')}else $('memNow').textContent='—';
+ if(L?.ram!=null&&m.ramGiB){big('memNow',L.ram,`de ${nf(m.ramGiB)} GB`,1);[...$('memMeter').children].forEach((el,i)=>el.style.width=[L.apps,L.wired,L.comp][i]/m.ramGiB*100+'%')}else{$('memNow').textContent='—';[...$('memMeter').children].forEach(el=>el.style.width='0%')}
  const pl=p>=4?'crit':p>=2?'warn':p===1?'':'none';status('memStatus',pl,p>=4?'Presión crítica':p>=2?'Con presión':p===1?'Sin presión':'Sin lectura');
  // Temperature
- const th=S?.thermal,tc=L?.pa,hot=L?.pm;
+ const th=S?.thermal,tc=L?.pa??L?.ca,hot=L?.pm;
  big('tempNow',tc,'°C');
  const tl=th===3?'crit':th===2||th===1?'warn':tc==null||th==null?'none':'';
  meter('tempMeter',tc,tl);status('tempStatus',tl,tc==null?'Sin lectura':THERMAL[th]??'Sin estado térmico');
- $('tempNote').innerHTML=tc!=null?`Pico <b>${nf(hot)} °C</b> · Eficiencia <b>${nf(L.ea)} °C</b><br>Estado térmico de macOS: <b>${THERMAL[th]??'—'}</b>`:'Sin lectura de sensores';
+ const B=D.detail?.battery,laptop=!!m.battery;
+ $('gpuTempTile').hidden=laptop;$('batteryTile').hidden=!laptop;
+ $('tempNote').innerHTML=tc!=null?`${L?.pa!=null?`Pico <b>${nf(hot)} °C</b> · Eficiencia <b>${nf(L.ea)} °C</b>`:laptop&&L?.g!=null?`Media de macOS / macmon · GPU <b>${nf(L.g)} °C</b>`:'Media CPU informada por macOS / macmon'}<br>Estado térmico de macOS: <b>${THERMAL[th]??'—'}</b>`:'Sin lectura de sensores';
  // GPU temperature: display the native HID reading itself, without inferring activity.
  const gt=S?.groups?.find(g=>g.key==='gpu');
- big('gpuTempNow',gt?.avg,'°C',1);meter('gpuTempMeter',gt?.avg);
- status('gpuTempStatus',gt?'':'none',gt?'Sensor HID':'Sin lectura');
- $('gpuTempNote').innerHTML=gt?`${gt.sensors.length} sensores · máximo <b>${nf(gt.max,1)} °C</b><br>Media de la zona GPU, informada por macOS`:'Sin lectura de sensores GPU';
- const fan=S?.fan;
- big('fanNow',fan?.rpm,'RPM');meter('fanMeter',fan?.rpm!=null&&fan?.max?fan.rpm/fan.max*100:null);
- status('fanStatus',fan?.rpm==null?'none':'',fan?.rpm==null?'Sin lectura':'Solo lectura');
- $('fanNote').innerHTML=fan?.rpm!=null?`Rango informado: <b>${nf(fan.min)}–${nf(fan.max)} RPM</b><br>No se modifica el control del ventilador`:'Sin lectura del ventilador';
- // Power
+ const gpuTemp=gt?.avg??L?.g;
+ big('gpuTempNow',gpuTemp,'°C',1);meter('gpuTempMeter',gpuTemp);
+ status('gpuTempStatus',gpuTemp!=null?'':'none',gt?'Sensor HID':gpuTemp!=null?'macOS / macmon':'Sin lectura');
+ $('gpuTempNote').innerHTML=gt?`${gt.sensors.length} sensores · máximo <b>${nf(gt.max,1)} °C</b><br>Media de la zona GPU, informada por macOS`:gpuTemp!=null?'Media GPU informada por macOS / macmon':'Sin lectura de sensores GPU';
+ const fans=(S?.fans?.length?S.fans:S?.fan?.rpm!=null?[S.fan]:[]).filter(f=>ok(f.rpm));
+ const fan=fans.reduce((a,f)=>!a||f.rpm>a.rpm?f:a,null);
+ big('fanNow',fan?.rpm,'RPM');meter('fanMeter',fan?.max?fan.rpm/fan.max*100:null);
+ status('fanStatus',fan?'':'none',fan?'Solo lectura':'Sin lectura');
+ const idle=fans.length&&fans.every(f=>ok(f.min)&&f.rpm<=f.min*1.05);
+ $('fanNote').innerHTML=fans.length>1?fans.map((f,i)=>`Ventilador ${i+1} <b>${nf(f.rpm)}</b>`).join(' · ')+` RPM<br>${idle?'Los dos giran al mínimo':'En grande, el más rápido'}`:fan?`Rango informado: <b>${nf(fan.min)}–${nf(fan.max)} RPM</b><br>No se modifica el control del ventilador`:'Sin lectura del ventilador';
+ // Power: a MacBook's battery gauge measures the whole Mac; macmon's SMC figure is only an estimate.
+ if(laptop){
+  const total=L?.bw,parts=[[L?.cw,'CPU'],[L?.gw,'GPU'],[L?.aw,'Neural Engine']].filter(([v],i)=>ok(v)&&(i<2||v>=.05));
+  const sum=parts.reduce((a,[v])=>a+v,0),restW=ok(total)?Math.max(0,total-sum):null,scale=Math.max(total||0,sum)||1;
+  big('powerNow',total,'W',1);
+  $('powerMeter').className='meter stack';
+  $('powerMeter').innerHTML=ok(total)?parts.map(([v],i)=>`<span style="width:${v/scale*100}%;background:${COLORS[i]}"></span>`).join('')+`<span style="width:${restW/scale*100}%;background:var(--ink2);opacity:.45"></span>`:'<span style="width:0"></span>';
+  status('powerStatus',ok(total)?'':'none',ok(total)?'Medido':'Sin lectura');
+  $('powerNote').innerHTML=ok(total)?`<span class="keys">${parts.map(([v,n],i)=>`<span><i style="background:${COLORS[i]}"></i>${n} <b>${auto(v)} W</b></span>`).join('')}<span><i style="background:var(--ink2);opacity:.45"></i>Resto <b>${auto(restW)} W</b></span></span>Todo el Mac, media del último minuto`:'Sin medición de la batería';
+ }else{
  big('powerNow',L?.sw,'W',1);
  const pw=[L?.cw,L?.gw,L?.aw];
  $('powerMeter').innerHTML=L?.sw?pw.map((v,i)=>`<span style="width:${(v||0)/L.sw*100}%;background:${COLORS[i]}"></span>`).join(''):'<span style="width:0"></span>';
  $('powerMeter').className='meter stack';
- status('powerStatus',L?.sw==null?'none':'',L?.sw==null?'Sin lectura':'Estimado SMC');
+ status('powerStatus',L?.sw==null?'none':'',L?.sw==null?'Sin lectura':'Estimado macOS');
  $('powerNote').innerHTML=L?.sw!=null?`<span class="keys"><span><i style="background:${COLORS[0]}"></i>CPU <b>${auto(L.cw)} W</b></span><span><i style="background:${COLORS[1]}"></i>GPU <b>${auto(L.gw)} W</b></span><span><i style="background:${COLORS[2]}"></i>Neural Engine <b>${auto(L.aw)} W</b></span></span>`:'Sin datos de macmon';
+ }
+ // Battery
+ if(laptop){
+  const pct=B?.percent,low=!B?.plugged&&pct<=10?'crit':!B?.plugged&&pct<=20?'warn':'';
+  big('batNow',pct,'%');meter('batMeter',pct,low);
+  status('batStatus',!B?'none':low,!B?'Sin lectura':B.charging?'Cargando':B.plugged?(B.full?'Cargada':'Enchufada'):low==='crit'?'Casi agotada':low?'Batería baja':'Con batería');
+  const flow=ok(B?.batteryW)&&Math.abs(B.batteryW)>=.5?(B.batteryW>0?`entran <b>${auto(B.batteryW)} W</b>`:`salen <b>${auto(-B.batteryW)} W</b>`):null;
+  const first=!B?'':B.plugged?`Cargador de <b>${nf(B.adapterW)} W</b> · ${B.charging?(B.minutesToFull?`llena en <b>${duration(B.minutesToFull*60)}</b>`:'cargando'):B.full?'carga completa':'sin cargar ahora'}`:B.minutesLeft?`Quedan unas <b>${duration(B.minutesLeft*60)}</b>`:'macOS está calculando la autonomía';
+  $('batNote').innerHTML=B?[first,[L?.bt!=null&&`Temperatura <b>${nf(L.bt,1)} °C</b>`,flow].filter(Boolean).join(' · ')].filter(Boolean).join('<br>'):'Sin lectura de la batería';
+ }
  // Storage
  const sp=D.space,ssd=D.ssd;
- if(sp){const freePct=sp.free/sp.total*100;big('diskNow',sp.free/1e9,'GB libres');meter('diskMeter',100-freePct,freePct<5?'crit':freePct<10?'warn':'')}
+ if(sp){const freePct=sp.free/sp.total*100;big('diskNow',sp.free/1e9,'GB libres');meter('diskMeter',100-freePct,freePct<5?'crit':freePct<10?'warn':'')}else{big('diskNow',null,'');meter('diskMeter',null)}
  const sl=ssd?.warning||ssd?.passed===false?'crit':sp&&sp.free/sp.total<.1?'warn':ssd?'':'none';
- status('diskStatus',sl,ssd?.warning?'Aviso del SSD':ssd?.passed===false?'SMART: fallo':sl==='warn'?'Poco espacio':ssd?'SMART normal':'Sin SMART');
+ status('diskStatus',sl,ssd?.warning?'Aviso del SSD':ssd?.passed===false?'SMART: fallo':sl==='warn'?'Poco espacio':ssd?.passed===true?(ssd.partial?'SMART parcial':'SMART normal'):'Sin SMART');
  $('diskNote').innerHTML=[sp&&`<b>${bytes(sp.total-sp.free)}</b> de ${bytes(sp.total)} usados`,[L?.ssd!=null&&`SSD <b>${nf(L.ssd,1)} °C</b>`,ssd&&`desgaste SMART <b>${nf(ssd.used)} %</b>`].filter(Boolean).join(' · ')].filter(Boolean).join('<br>');
 }
 
@@ -386,6 +424,7 @@ function paintSensors(){
  const all=S.groups.flatMap(g=>g.sensors.map(s=>[g,...s]));
  const hi=Math.max(100,...all.map(a=>a[2])),lo=20;
  $('sensorCount').textContent=`${all.length} sensores · escala ${lo}–${hi} °C`;
+ $('sensorNote').textContent=S.groups.some(g=>g.key==='p')?'Media y máximo de los sensores HID de cada zona. Los nombres originales están en la tabla; no se asigna un sensor a un núcleo sin conocer esa correspondencia.':'Este Mac no da sensores por grupo de núcleos: la temperatura de CPU y GPU de arriba es la media que informa macOS / macmon. Aquí, media y máximo de cada zona; los nombres originales están en la tabla.';
  rows.innerHTML=S.groups.map(g=>{
   const dots=g.sensors.map(([name,v])=>`<circle cx="${((Math.max(lo,v)-lo)/(hi-lo)*100).toFixed(2)}%" cy="13" r="4.5" fill="${COLORS[0]}" stroke="${SURFACE}" stroke-width="2"><title>${esc(name)}: ${nf(v,1)} °C</title></circle>`).join('');
   const ticks=[20,40,60,80,100].filter(t=>t<=hi).map(t=>`<line x1="${(t-lo)/(hi-lo)*100}%" x2="${(t-lo)/(hi-lo)*100}%" y1="7" y2="19" stroke="${GRID}"/>`).join('');
@@ -402,9 +441,10 @@ function paintApps(){
 }
 
 function paintFacts(){
- const n=D.now,S=D.detail?.sensors,ssd=D.ssd,f=S?.fan;
+ const n=D.now,S=D.detail?.sensors,ssd=D.ssd,f=S?.fan,B=D.detail?.battery;
  const items=[
-  ['Ventilador',f?.rpm!=null?`${nf(f.rpm)} RPM`:'—',f?.max?`Mínimo ${nf(f.min)} · máximo ${nf(f.max)} RPM`:''],
+  D.machine.battery?['Batería: salud',B?.health?.capacity!=null?`${nf(B.health.capacity)} % de capacidad`:'—',B?[ok(B.cycles)&&`${nf(B.cycles)}${ok(B.designCycles)?' de '+nf(B.designCycles):''} ciclos`,B.health?.condition&&`estado ${B.health.condition}`].filter(Boolean).join(' · '):'']
+   :['Ventilador',f?.rpm!=null?`${nf(f.rpm)} RPM`:'—',f?.max?`Mínimo ${nf(f.min)} · máximo ${nf(f.max)} RPM`:''],
   ['Carga 1 / 5 / 15 min',n.load?[n.load.load1,n.load.load5,n.load.load15].map(v=>nf(v,1)).join(' / '):'—',D.machine.cores?`${D.machine.cores} núcleos en total`:''],
   ['Swap',n.swap?`${nf(n.swap.used/1024,1)} GB`:'—',D.swapUsage?`de ${nf(parseFloat(D.swapUsage.match(/total = ([\d.]+)M/)?.[1])/1024,1)} GB reservados ahora`:''],
   ['SSD: escrito en total',ssd?bytes(ssd.written):'—',ssd?`Leído ${bytes(ssd.read)} · ${nf(ssd.hours)} h encendido`:''],
@@ -417,32 +457,46 @@ function paintFacts(){
 function paintVerdict(){
  const L=D.local,S=D.detail?.sensors,p=D.pressure,sp=D.space,ssd=D.ssd,cpu=D.now.cpu?D.now.cpu.user+D.now.cpu.nice+D.now.cpu.system:null;
  let level='',title='Sin alertas actuales';const facts=[];
- if(!L||!S||!D.detail?.macmon||!D.now.cpu||!D.now.gpu||!sp||p==null){level='warn';title='Lecturas parciales';facts.push('Alguna fuente no está disponible; sus valores se muestran como “—”.')}
+ if(D.recording?.missing?.length||!L||!S||!D.detail?.macmon||!D.now.cpu||!D.now.gpu||!sp||p==null){level='warn';title='Lecturas parciales';facts.push('Alguna fuente no está disponible; sus valores se muestran como “—”.')}
+ if(!D.recording?.healthy){level='warn';title='Registro de datos interrumpido';facts.push('No se están confirmando nuevas muestras en disco.')}
  if(p>=4){level='crit';title='Memoria al límite'}else if(p>=2&&level!=='crit'){level='warn';title='La memoria va justa'}
  if(S?.thermal===3){level='crit';title='Estado térmico crítico'}else if((S?.thermal===2||S?.thermal===1)&&!level){level='warn';title=THERMAL[S.thermal]}
  if(ssd&&(ssd.warning||ssd.passed===false)){level='crit';title='El SSD avisa de un problema'}
+ const B=D.detail?.battery;
+ if(B&&!B.plugged&&B.percent<=10){level='crit';title='Batería casi agotada'}else if(B&&!B.plugged&&B.percent<=20&&level!=='crit'){level='warn';title='Batería baja'}
  if(sp&&sp.free/sp.total<.05){level='crit';title='Disco casi lleno'}else if(sp&&sp.free/sp.total<.1&&!level){level='warn';title='Queda poco espacio'}
- if(p>=2)facts.push('macOS está comprimiendo memoria y usando el SSD como apoyo');else if(p===1)facts.push('Sin presión de memoria');
- if(L?.pa!=null)facts.push(`CPU a ${nf(L.pa)} °C`);
+ if(p>=2)facts.push('macOS informa de presión de memoria');else if(p===1)facts.push('Sin presión de memoria');
+ if((L?.pa??L?.ca)!=null)facts.push(`CPU a ${nf(L.pa??L.ca)} °C`);
  const swap=D.now.swap?D.now.swap.used/1024:null;if(swap>1)facts.push(`${nf(swap,1)} GB en swap`);
  if(cpu!=null)facts.push(`CPU al ${nf(cpu)} %`);
- const top=D.apps?.cpu?.[0];if(top&&top[1]>25)facts.push(`lo que más CPU usa: ${top[0]} (${nf(top[1])} %)`);
+ if(B&&!B.plugged&&ok(B.percent))facts.push(`con batería (${nf(B.percent)} %)`);
+ const top=D.apps?.cpu?.[0];if(top&&top[1]>25)facts.push(`lo que más CPU usa: ${top[0]} (${nf(top[1])} % de un núcleo)`);
  $('verdict').className='card verdict '+level;$('verdictIcon').textContent=level?'!':'✓';$('verdictTitle').textContent=title;$('verdictText').textContent=facts.join(' · ');
- document.title=(level?'⚠︎ ':'')+'Mac mini';
+ const machineName=(D.machine.name||'Mac').replace(/^.*?[’']s\s+/,'');
+ document.title=(level?'⚠︎ ':'')+machineName;
+ document.querySelector('meta[name="apple-mobile-web-app-title"]').content=machineName;
+ const r=D.recording;
+ $('recording').textContent=r?`${r.healthy?'Registro confirmado en disco':'Fallo de registro'}${r.savedAt?' · última muestra '+clock(r.savedAt,true):''}${r.firstFullAt?' · registro ampliado desde '+new Date(r.firstFullAt*1000).toLocaleString('es-ES'):''} · muestreo cada 5 s · retención 24 h${r.missing?.length?' · faltan: '+r.missing.join(', '):''}${r.error?' · '+r.error:''}`:'Estado del registro no disponible';
 }
 
 async function update(){
  if(busy)return;busy=true;
  try{
-  const res=await fetch(`/mini/api/snapshot?range=${range}`,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+  const res=await fetch(`__PANEL_PATH__/api/snapshot?range=${range}`,{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(!res.ok)throw Error(res.status);
   const data=await res.json();if(data.range!==range)return;if(!data.now||!data.series||!data.machine||Date.now()/1000-data.at>30)throw Error('Lecturas antiguas o incompletas');D=data;
+  CHARTS.find(c=>c.id==='temp').series=D.local?.pa!=null?[["local.pa","Rendimiento"],["local.ea","Eficiencia"],["local.g","GPU"],["local.ssd","SSD"]]:[["local.ca","CPU"],["local.g","GPU"],["local.ssd","SSD"],...(D.local?.bt!=null?[["local.bt","Batería"]]:[])];
+  const power=CHARTS.find(c=>c.id==='power');
+  if(D.machine.battery)Object.assign(power,{title:'Consumo',note:'Todo el Mac medido por la batería · CPU y GPU estimados',series:[['local.bw','Todo el Mac'],['local.cw','CPU'],['local.gw','GPU']]});
+  $('ct-power').textContent=power.title;$('cn-power').textContent=power.note+' · '+power.unit;
+  CHARTS.find(c=>c.id==='fan').series=D.local?.f2!=null?[["fan.fan","Ventilador 1"],["local.f2","Ventilador 2"]]:[["fan.fan","Ventilador"]];
   lastOk=Date.now();$('live').className='live';$('liveText').textContent='En directo · '+clock(D.at,true);
   document.querySelectorAll('.card,.charts').forEach(el=>el.style.opacity='');
   for(const f of [paintTiles,paintCores,paintSensors,paintApps,paintFacts,paintVerdict,drawAll]){try{f()}catch(e){console.error(f.name,e)}}
  }catch(e){
   $('live').className='live stale';$('liveText').textContent=lastOk?'Sin conexión · último dato '+new Date(lastOk).toLocaleTimeString('es-ES'):'Sin conexión';
   document.querySelectorAll('.card').forEach(el=>el.style.opacity=.5);
+  $('recording').textContent='Sin conexión: no se puede comprobar el registro en disco.';
  }finally{busy=false}
 }
 function setRange(r){range=r;try{localStorage.setItem('range',r)}catch{};document.querySelectorAll('.range button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.range===r));$('charts').style.opacity=.55;setCursor(null);busy=false;update()}

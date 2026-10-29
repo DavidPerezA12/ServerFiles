@@ -11,6 +11,13 @@
 		<string>/opt/homebrew/bin/python3</string>
 		<string>__PANEL_DIR__/server.py</string>
 	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PANEL_PATH</key>
+		<string>/mini</string>
+		<key>PANEL_TAILNET_FALLBACK</key>
+		<string>0</string>
+	</dict>
 	<key>RunAtLoad</key>
 	<true/>
 	<key>StandardErrorPath</key>

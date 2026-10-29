@@ -14,6 +14,8 @@ No hay instalador. Los ficheros de aquí son plantillas y guías que se adaptan 
   La imagen es una demostración con datos simulados, no una captura de la
   actividad, el almacenamiento o la red del servidor real.
 
+- **El mismo panel en un MacBook.** El perfil de [monitorización](docs/MONITORING.md#use-the-same-panel-on-a-macbook) detecta su hardware, admite las temperaturas agregadas del M1 Pro y sus dos ventiladores, y publica el panel en una ruta privada propia. No aplica los ajustes de energía del mini al portátil.
+
 - **Ajustes para que el mini sobreviva solo.** Inicio de sesión automático, energía (sin suspensión, rearranque tras corte de luz), qué apps se abren al iniciar sesión y qué servicios arrancan solos (ver [docs/MINI.md](docs/MINI.md)).
 - **Guía de cliente para iPad.** Qué apps instalar y cómo conectarse al mini por SSH, T3 Code, VS Code Remote y escritorio remoto (ver [docs/IPAD.md](docs/IPAD.md)). Un Mac como cliente se configura desde dotfiles.
 

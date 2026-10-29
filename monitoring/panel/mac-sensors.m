@@ -1,6 +1,7 @@
 // Prints one JSON object with this Mac's real sensor readings (no root needed):
 //   temps:   every HID temperature sensor, by macOS's own name (°C)
 //   fan:     SMC fan 0 actual / minimum / maximum RPM
+//   fans:    the same reading for every fan the SMC reports (F0, F1, ...)
 //   thermal: macOS thermal state (0 nominal, 1 fair, 2 serious, 3 critical)
 // Build: clang -O2 -fobjc-arc -framework Foundation -framework IOKit mac-sensors.m -o mac-sensors
 #import <Foundation/Foundation.h>
@@ -54,19 +55,25 @@ int main(void) {
         }
         CFRelease(client);
 
-        NSMutableDictionary *fan = [NSMutableDictionary dictionary];
+        NSMutableArray *fans = [NSMutableArray array];
         io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"));
         if (service && IOServiceOpen(service, mach_task_self(), 0, &smc) == KERN_SUCCESS) {
-            NSDictionary *keys = @{@"rpm": @"F0Ac", @"min": @"F0Mn", @"max": @"F0Mx"};
-            for (NSString *field in keys) {
-                NSNumber *value = smcFloat([keys[field] UTF8String]);
-                if (value) fan[field] = value;
+            // Fans are numbered from 0; the first missing actual-RPM key ends the list.
+            for (int i = 0; i < 4; i++) {
+                NSMutableDictionary *fan = [NSMutableDictionary dictionary];
+                NSDictionary *keys = @{@"rpm": @"F%dAc", @"min": @"F%dMn", @"max": @"F%dMx"};
+                for (NSString *field in keys) {
+                    NSNumber *value = smcFloat([[NSString stringWithFormat:keys[field], i] UTF8String]);
+                    if (value) fan[field] = value;
+                }
+                if (!fan[@"rpm"]) break;
+                [fans addObject:fan];
             }
             IOServiceClose(smc);
         }
         if (service) IOObjectRelease(service);
 
-        NSDictionary *result = @{@"temps": temps, @"fan": fan,
+        NSDictionary *result = @{@"temps": temps, @"fan": fans.count ? fans[0] : @{}, @"fans": fans,
                                  @"thermal": @(NSProcessInfo.processInfo.thermalState)};
         NSData *json = [NSJSONSerialization dataWithJSONObject:result options:NSJSONWritingSortedKeys error:nil];
         fwrite(json.bytes, 1, json.length, stdout);
