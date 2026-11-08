@@ -60,11 +60,13 @@ The available blocks are:
   what only the mini needs (Jump Desktop Connect, monitoring).
 - Remote access: T3 Code and T3 Connect, Tailscale, macOS Remote Login,
   Jump Desktop Connect and VS Code Remote Tunnels.
-- Monitoring (`docs/MONITORING.md`).
+- Monitoring (`docs/MONITORING.md`), plus `btop` for a live view over SSH.
 - Settings, login items and what starts on its own, so the mini recovers
   from a restart or a power cut (`docs/MINI.md`).
 - Client setup: a Mac follows dotfiles' `docs/MAC_MINI.md`, the iPad
   `docs/IPAD.md`.
+- Optional on a client Mac: one cmux workspace per machine (see
+  "One terminal per machine" below).
 
 Before the development-tools block, follow [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 Ask which workloads this host should support: Android, iOS/macOS, web/backend,
@@ -80,6 +82,39 @@ Report each block's result and next step. Keep progress messages short.
 When a step needs a sign-in or permission, explain the exact action to take
 in the app or system settings and wait for the user to complete it. Never
 ask for a password, private key or token in chat.
+
+## One terminal per machine and live monitoring
+
+Optional, chosen per client. It gives the user one terminal per Mac and two
+ways to see how each Mac is doing: `btop` in a terminal and the web panel.
+
+- **cmux on a client Mac.** cmux (`brew install --cask cmux`) is a terminal
+  with a sidebar of workspaces. Offer it on a client Mac; it is not part of
+  dotfiles. Create one workspace per remote Mac from a terminal *inside*
+  cmux, using the SSH alias the client already has:
+  `cmux ssh <ssh-alias> --name "<Machine name>"`. Add
+  `--command 'tmux new-session -A -s dev'` so the session survives closing
+  cmux, and keep one local workspace for the client itself. The user can pin
+  them. The other OS of a dual-boot laptop cannot have a workspace at the
+  same time; it is the same hardware.
+- **The cmux socket.** By default (`automation.socketControlMode`) the cmux
+  CLI only accepts processes started inside cmux, so an agent running
+  elsewhere gets "access denied". Give the user the command to run instead;
+  do not loosen the socket mode without asking. Its settings live in
+  `~/.config/cmux/cmux.json`; back it up before editing.
+- **Tell the machines apart.** Shared dotfiles give every Mac the same
+  prompt. Check the cmux sidebar (remote host and connected status) or run
+  `scutil --get ComputerName` / `hostname` before acting in a terminal.
+- **btop.** Install `btop` on each Mac to monitor (it is in this repo's
+  `Brewfile`, monitoring block). From any client, connect by SSH (cmux on a
+  Mac, Termius on the iPad) and run `btop`; `q` quits. It needs nothing
+  beyond SSH.
+- **Web panel.** Netdata and the panel follow `docs/MONITORING.md` and open
+  from a Mac or the iPad with Tailscale connected.
+- **Verify** on each client: the SSH workspace or Termius host reports the
+  remote hostname, `btop` shows the remote Mac's hardware (for example its
+  total memory), and the panel loads with changing data. Report a client as
+  pending until the user has tested it there.
 
 ## Make hardware-dependent choices
 

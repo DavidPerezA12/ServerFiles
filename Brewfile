@@ -8,4 +8,5 @@ cask "jump-desktop-connect"
 brew "netdata"
 brew "macmon"
 brew "smartmontools"
+brew "btop"           # live view in a terminal over SSH
 brew "python"
